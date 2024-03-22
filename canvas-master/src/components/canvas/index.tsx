@@ -1,5 +1,5 @@
 import * as conf from './conf'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { State, step, click, mouseMove, endOfGame, Window } from './state'
 import { render, RenderProps } from './renderer'
 
@@ -44,6 +44,8 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   const ref = useRef<any>()
   const state = useRef<State>(initialState)
   const scaleRef = useRef<number>(1)
+  const cellSizeRef = useRef<number>(Math.min(state.current.size.width / conf.maze[0].length, state.current.size.height / conf.maze.length) // Calculate cell size based on canvas and maze size
+  )
   const posRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const drag = useRef<boolean>(false)
   const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
@@ -57,6 +59,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     render(ctx, {
       pos: posRef.current,
       scale: scaleRef.current,
+      cellSize : cellSizeRef.current,
       window : windowRef.current,
     })(state.current)
     if (!state.current.endOfGame) requestAnimationFrame(() => iterate(ctx))
@@ -68,6 +71,31 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   const onMove = (e: PointerEvent) => {
     state.current = mouseMove(state.current)(e)
   }
+
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowUp':
+        // Gérer la flèche vers le haut
+        console.log('Up arrow key pressed');
+        break;
+      case 'ArrowDown':
+        // Gérer la flèche vers le bas
+        console.log('Down arrow key pressed');
+        break;
+      case 'ArrowLeft':
+        // Gérer la flèche gauche
+        console.log('Left arrow key pressed');
+        break;
+      case 'ArrowRight':
+        // Gérer la flèche droite
+        console.log('Right arrow key pressed');
+        break;
+      default:
+        console.log('default ');
+        break;
+    }
+  }, []);
+  
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
@@ -83,7 +111,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
           y: posRef.current.y - dy,
         }
       }
-    }
+    }    
     const onDragStart = (e: PointerEvent) => {
       const { x, y } = e
       dragStart.current = { x, y }
@@ -103,6 +131,8 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
         dragStart.current = { x, y }
       }
     }
+  
+    
 
     ref.current.addEventListener('click', onClick)
     ref.current.addEventListener('mousemove', onMove)
@@ -117,6 +147,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     ref.current.addEventListener('touchend', onDragEnd)
     ref.current.addEventListener('mousemove', onDragMove)
     ref.current.addEventListener('touchmove', onDragMove)
+    ref.current.addEventListener('keydown', handleKeyDown)
     initCanvas(iterate)(ref.current)
 
     return () => {
@@ -133,6 +164,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
       ref.current.removeEventListener('touchend', onDragEnd)
       ref.current.removeEventListener('mousemove', onDragMove)
       ref.current.removeEventListener('touchmove', onDragMove)
+      ref.current.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
   return <canvas {...{ height, width, ref }} />

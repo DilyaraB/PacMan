@@ -44,6 +44,7 @@ const clear = (ctx: CanvasRenderingContext2D) => {
 export type RenderProps = {
   pos: { x: number; y: number }
   scale: number
+  cellSize : number
   window : { height: number; width: number}
 }
 
@@ -84,6 +85,31 @@ const drawSquare = (
   ctx.fillRect(posX, posY, size, size);
 };
 
+
+const drawLabyrinth = (
+  ctx: CanvasRenderingContext2D,
+  renderProps: RenderProps,
+  maze : conf.Maze 
+) => {
+
+  maze.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      const x = colIndex * renderProps.cellSize;
+      const y = rowIndex * renderProps.cellSize;
+
+      if (cell === '#') {
+        ctx.fillStyle = 'black'; // Color for walls
+        ctx.fillRect(
+          (x + renderProps.pos.x) * renderProps.scale,
+          (y + renderProps.pos.y) * renderProps.scale,
+          renderProps.cellSize * renderProps.scale,
+          renderProps.cellSize * renderProps.scale
+        );
+      }
+    });
+  });
+};
+
 const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '96px arial'
   ctx.strokeText(
@@ -107,6 +133,7 @@ const computeColor = (life: number, maxLife: number, baseColor: string) =>
 export const render =
   (ctx: CanvasRenderingContext2D, props: RenderProps) => (state: State) => {
     clear(ctx)
+    //const {height,  width } = props.window; // Get canvas dimensions
     displayWindow(ctx, (props.pos.x * props.scale) , props.pos.y*props.scale , (props.scale * state.size.width), (props.scale * state.size.height))
     state.pos.map((c) =>
       drawCirle(
@@ -124,6 +151,7 @@ export const render =
         c.width
       )
     )
+    drawLabyrinth(ctx, props, conf.maze)
     diplayGameText(ctx)(state)
     
     
