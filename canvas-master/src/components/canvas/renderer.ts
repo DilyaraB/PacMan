@@ -1,5 +1,5 @@
 import * as conf from './conf'
-import { State } from './state'
+import { State, Pacman } from './state'
 const COLORS = {
   RED: '#ff0000',
   GREEN: '#008800',
@@ -64,6 +64,48 @@ const drawCirle = (
     2 * Math.PI
   )
   ctx.fill()
+}
+
+function drawPacman
+  (ctx: CanvasRenderingContext2D, 
+   renderProps: RenderProps,
+   { x, y }: { x: number; y: number },
+   direction : String) {
+
+  const radius = 20; // Taille de Pac-Man, ajustez selon vos besoins
+  const mouthOpenAngle = 0.2 * Math.PI; // Ajustez l'ouverture de la bouche de Pac-Man
+  
+  // Calculer l'angle de départ et de fin pour la "bouche" de Pac-Man selon sa direction
+  let startAngle = 0.5 * Math.PI; // Angle de départ par défaut (vers le haut)
+  let endAngle = 2.5 * Math.PI; // Angle de fin par défaut
+  switch(direction) {
+    case "right":
+      startAngle = -mouthOpenAngle;
+      endAngle = 2 * Math.PI + mouthOpenAngle;
+      break;
+    case "down":
+      startAngle = 0.5 * Math.PI - mouthOpenAngle;
+      endAngle = 0.5 * Math.PI + mouthOpenAngle;
+      break;
+    case "left":
+      startAngle = Math.PI - mouthOpenAngle;
+      endAngle = Math.PI + mouthOpenAngle;
+      break;
+    case "up":
+      startAngle = 1.5 * Math.PI - mouthOpenAngle;
+      endAngle = 1.5 * Math.PI + mouthOpenAngle;
+      break;
+  }
+
+  // Dessiner Pac-Man
+  //console.log("drawPacman ",direction)
+  
+  ctx.beginPath();
+  ctx.arc(x, y, radius, endAngle,startAngle, false); // Corps de Pac-Man
+  ctx.lineTo(x, y); // Revenir au centre pour fermer la bouche
+  ctx.fillStyle = "yellow"; // La couleur de Pac-Man
+  ctx.fill();
+  ctx.closePath();
 }
 
 const drawSquare = (
@@ -153,7 +195,7 @@ export const render =
     )
     drawLabyrinth(ctx, props, conf.maze)
     diplayGameText(ctx)(state)
-    
+    drawPacman(ctx, props, state.pacman.coord, state.pacman.direction)
     
     if (state.endOfGame) {
       const text = 'END'

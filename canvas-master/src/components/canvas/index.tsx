@@ -1,6 +1,6 @@
 import * as conf from './conf'
 import { useRef, useEffect, useCallback } from 'react'
-import { State, step, click, mouseMove, endOfGame, Window } from './state'
+import { State, step, click, mouseMove, endOfGame, Window, Pacman } from './state'
 import { render, RenderProps } from './renderer'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
@@ -34,6 +34,16 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
       },
       width : randomInt(30)
     })),
+    pacman: {
+      coord: {
+        x: randomInt(width - 120) + 60,
+        y: randomInt(height - 120) + 60,
+        dx: 4 * randomSign(),
+        dy: 4 * randomSign(),
+      },
+      invincible: 0,
+      direction: "right", 
+    },
     size : {
       height : (height - 50) , 
       width : width - 50
@@ -52,9 +62,20 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   const downTS = useRef<number>(Date.now())
   const windowRef = useRef<Window>({height : state.current.size.height - 10,
                                     width : state.current.size.width - 10} )
-
+  const pacmanRef = useRef<Pacman>(
+    {coord: {
+      x: 0,
+      y: 0,
+      dx: 0,
+      dy: 0,
+    },
+    invincible: 0,
+    direction: "left", 
+    })
+            
   const iterate = (ctx: CanvasRenderingContext2D) => {
     state.current = step(state.current)
+    //console.log("iterate ",state.current.pacman.direction)
     state.current.endOfGame = !endOfGame(state.current)
     render(ctx, {
       pos: posRef.current,
@@ -64,6 +85,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     })(state.current)
     if (!state.current.endOfGame) requestAnimationFrame(() => iterate(ctx))
   }
+
   const onClick = (e: PointerEvent) => {
     state.current = click(state.current)(e)
   }
@@ -75,23 +97,20 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     switch (event.key) {
       case 'ArrowUp':
-        // Gérer la flèche vers le haut
-        console.log('Up arrow key pressed');
+        console.log("handleKeyDown = up")
+        state.current.pacman.direction = "up";
         break;
       case 'ArrowDown':
-        // Gérer la flèche vers le bas
-        console.log('Down arrow key pressed');
+        console.log("handleKeyDown = down")
+        state.current.pacman.direction = "down";
         break;
       case 'ArrowLeft':
-        // Gérer la flèche gauche
-        console.log('Left arrow key pressed');
+        console.log("handleKeyDown = left")
+        state.current.pacman.direction = "left";
         break;
       case 'ArrowRight':
-        // Gérer la flèche droite
-        console.log('Right arrow key pressed');
-        break;
-      default:
-        console.log('default ');
+        console.log("handleKeyDown = right")
+        state.current.pacman.direction = "right";
         break;
     }
   }, []);
@@ -167,7 +186,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
       ref.current.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
-  return <canvas {...{ height, width, ref }} />
+  return <canvas tabIndex={0} {...{ height, width, ref }} />
 }
 
 export default Canvas
