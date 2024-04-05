@@ -17,6 +17,8 @@ export type State = {
   sqr : Array<Square>
   pacman : Pacman
   size: Size
+  cellSize : number
+  maze : conf.Maze
   endOfGame: boolean
 }
 
@@ -66,29 +68,6 @@ export const click =
 
 const collide = (o1: Coord, o2: Coord) =>
   dist2(o1, o2) < Math.pow(2 * conf.RADIUS, 2)
-
-function collidePacmanWall(direction: Pacman["direction"], pacman: Pacman, maze: conf.Maze, cellSize: number): boolean {
-  const { x, y } = pacman.coord;
-  // Calculer la position de grille de Pac-Man
-  const gridX = Math.floor(x / cellSize);
-  const gridY = Math.floor(y / cellSize);
-
-  // Déterminer la cellule cible en fonction de la direction
-  let targetX = gridX;
-  let targetY = gridY;
-  switch (direction) {
-    case "up":    targetY -= 1; break;
-    case "down":  targetY += 1; break;
-    case "left":  targetX -= 1; break;
-    case "right": targetX += 1; break;
-  }
-
-  // Vérifier si la cellule cible est un mur
-  if (maze[targetY] && maze[targetY][targetX] === '#') {
-    return false; // Collision: Pac-Man ne peut pas bouger dans cette direction
-  }
-  return true; // Pas de collision: mouvement autorisé
-}
 
 const collideBoing = (p1: Coord, p2: Coord) => {
   const nx = (p2.x - p1.x) / (2 * conf.RADIUS)
@@ -187,21 +166,32 @@ export const step = (state: State) => {
   return {
     ...state,
     pos: state.pos.map(iterate(state.size)).filter((p) => p.life > 0),
-    pacman : updatePacmanPosition(state.size)(state.pacman),
+    pacman : updatePacmanPosition(state.size)(state.maze)(state.pacman)(state.cellSize),
   };
 };
 
-const updatePacmanPosition = (bound: Size) => (pacman: Pacman) => {
+
+function collidePacmanMaze(maze: conf.Maze, newX: number, newY: number, cellSize: number): boolean {
+  const col = Math.floor(newX / cellSize);
+  const row = Math.floor(newY / cellSize);
+
+  if (maze[row] && maze[row][col] !== '#') {
+    return true; // Pas un mur, la position est valide
+  }
+  return false; // Collision avec un mur
+}
+
+const updatePacmanPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (cellSize: number)=>{
   let { x, y } = pacman.coord;
   let direction = pacman.direction;
-  const speed = 5; // Vitesse de déplacement de Pac-Man, ajustez selon vos besoins
+  const speed = 3; // Vitesse de déplacement de Pac-Man, ajustez selon vos besoins
   // Calculer la position de grille de Pac-Man
-  const gridX = Math.floor(x / conf.cellSize);
-  const gridY = Math.floor(y / conf.cellSize);
+  const col = Math.floor(x / cellSize);
+  const row = Math.floor(y / cellSize);
 
   // Déterminer la cellule cible en fonction de la direction
-  let targetX = gridX;
-  let targetY = gridY;
+  let targetX = col;
+  let targetY = row;
   switch (direction) {
     case "up":    targetY -= 1; break;
     case "down":  targetY += 1; break;
@@ -210,14 +200,15 @@ const updatePacmanPosition = (bound: Size) => (pacman: Pacman) => {
   }
 
   // Vérifier si la cellule cible est un mur
-  if (conf.maze[targetY] && conf.maze[targetY][targetX] === '#') {
+  if (maze[targetY] && maze[targetY][targetX] === '#') {
+    console.log("pacman rencontre un mur")
     return {
       ...pacman,
       coord: { ...pacman.coord, x, y },
     }; // Collision: Pac-Man ne peut pas bouger dans cette direction
   }
 
-  // Mettre à jour la position de Pac-Man en fonction de sa direction
+  // // Mettre à jour la position de Pac-Man en fonction de sa direction
   switch (direction) {
     case "up":
       y -= speed;

@@ -98,8 +98,6 @@ function drawPacman
   }
 
   // Dessiner Pac-Man
-  //console.log("drawPacman ",direction)
-  
   ctx.beginPath();
   ctx.arc(x, y, radius, endAngle,startAngle, false); // Corps de Pac-Man
   ctx.lineTo(x, y); // Revenir au centre pour fermer la bouche
@@ -140,12 +138,10 @@ const drawLabyrinth = (
       const y = rowIndex * renderProps.cellSize;
 
       if (cell === '#') {
-        ctx.fillStyle = 'black'; // Color for walls
-        ctx.fillRect(
-          (x + renderProps.pos.x) * renderProps.scale,
-          (y + renderProps.pos.y) * renderProps.scale,
-          renderProps.cellSize * renderProps.scale,
-          renderProps.cellSize * renderProps.scale
+        ctx.fillStyle = 'darkblue';
+        ctx.fillRect(x,y,
+          renderProps.cellSize,
+          renderProps.cellSize
         );
       }
     });
