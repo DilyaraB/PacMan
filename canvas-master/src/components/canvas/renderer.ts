@@ -42,29 +42,11 @@ const clear = (ctx: CanvasRenderingContext2D) => {
 }
 
 export type RenderProps = {
-  pos: { x: number; y: number }
   scale: number
   cellSize : number
   window : { height: number; width: number}
 }
 
-const drawCirle = (
-  ctx: CanvasRenderingContext2D,
-  renderProps: RenderProps,
-  { x, y }: { x: number; y: number },
-  color: string
-) => {
-  ctx.beginPath()
-  ctx.fillStyle = color
-  ctx.arc(
-    (x + renderProps.pos.x) * renderProps.scale,
-    (y + renderProps.pos.y) * renderProps.scale,
-    conf.RADIUS * renderProps.scale,
-    0,
-    2 * Math.PI
-  )
-  ctx.fill()
-}
 
 function drawPacman
   (ctx: CanvasRenderingContext2D, 
@@ -106,23 +88,20 @@ function drawPacman
   ctx.closePath();
 }
 
-const drawSquare = (
+const drawPiece = (
   ctx: CanvasRenderingContext2D,
   renderProps: RenderProps,
   { x, y }: { x: number; y: number },
-  color: string,
   width : number,
 ) => {
-  ctx.beginPath();
-  ctx.fillStyle = color;
-
-  // Calcul des coordonnées et de la taille du carré en prenant en compte les renderProps
-  const posX = (x + renderProps.pos.x) * renderProps.scale;
-  const posY = (y + renderProps.pos.y) * renderProps.scale;
-  const size = width * renderProps.scale;
-
-  // Dessin du carré
-  ctx.fillRect(posX, posY, size, size);
+  ctx.beginPath()
+  ctx.fillStyle = "yellow"
+  ctx.arc(x, y,
+    conf.PIECERADIUS,
+    0,
+    2 * Math.PI
+  )
+  ctx.fill()
 };
 
 
@@ -150,12 +129,11 @@ const drawLabyrinth = (
 
 const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '96px arial'
-  ctx.strokeText(
-    `balls life ${state.pos
-      .map((p) => p.life)
-      .reduce((acc, val) => acc + val, 0)}`,
-    20,
-    100
+  ctx.fillStyle = 'black'
+  ctx.fillText(
+    `Score: ${state.pacman.score}`, // Affiche le score
+    20, // Position X du texte (à gauche de l'écran)
+    100 // Position Y du texte (en haut de l'écran)
   )
 }
 
@@ -172,20 +150,12 @@ export const render =
   (ctx: CanvasRenderingContext2D, props: RenderProps) => (state: State) => {
     clear(ctx)
     //const {height,  width } = props.window; // Get canvas dimensions
-    displayWindow(ctx, (props.pos.x * props.scale) , props.pos.y*props.scale , (props.scale * state.size.width), (props.scale * state.size.height))
-    state.pos.map((c) =>
-      drawCirle(
+    displayWindow(ctx, 0 , 0 , state.size.width, state.size.height)
+    state.pieces.map((c) =>
+      drawPiece(
         ctx,
         props,
         c.coord,
-        computeColor(c.life, conf.BALLLIFE, COLORS.GREEN)
-      ))
-    state.sqr.map((c) =>
-      drawSquare(
-        ctx,
-        props,
-        c.coord,
-        COLORS.RED,
         c.width
       )
     )

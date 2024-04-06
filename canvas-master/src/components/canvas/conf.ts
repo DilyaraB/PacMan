@@ -1,5 +1,6 @@
 export const FRICTION = 1
 export const RADIUS = 20
+export const PIECERADIUS = 10
 export const MINMOVE = 0.1
 
 export const BALLLIFE = 4

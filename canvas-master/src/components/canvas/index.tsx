@@ -16,23 +16,15 @@ const initCanvas =
 
 const Canvas = ({ height, width }: { height: number; width: number }) => {
   const initialState: State = {
-    pos: new Array(6).fill(1).map((_) => ({
-      life: conf.BALLLIFE,
+    pieces: new Array(20).fill(1).map((_) => ({
       coord: {
         x: randomInt(width - 120) + 60,
         y: randomInt(height - 120) + 60,
         dx: 4 * randomSign(),
         dy: 4 * randomSign(),
       },
-    })),
-    sqr: new Array(4).fill(1).map((_) => ({
-      coord: {
-        x: randomInt(width - 120) + 60,
-        y: randomInt(height - 120) + 60,
-        dx: 4 * randomSign(),
-        dy: 4 * randomSign(),
-      },
-      width : randomInt(30)
+      width : randomInt(30),
+      life: 1
     })),
     pacman: {
       coord: {
@@ -43,6 +35,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
       },
       invincible: 0,
       direction: "right", 
+      score: 0
     },
     size : {
       height : (height - 50) , 
@@ -57,29 +50,14 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   const state = useRef<State>(initialState)
   const scaleRef = useRef<number>(1)
   const cellSizeRef = useRef<number>(Math.min(state.current.size.width / conf.maze[0].length, state.current.size.height / conf.maze.length)) // Calculate cell size based on canvas and maze size)
-  const posRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
-  const drag = useRef<boolean>(false)
-  const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
-  const downTS = useRef<number>(Date.now())
   const windowRef = useRef<Window>({height : state.current.size.height - 10,
                                     width : state.current.size.width - 10} )
-  const pacmanRef = useRef<Pacman>(
-    {coord: {
-      x: 0,
-      y: 0,
-      dx: 0,
-      dy: 0,
-    },
-    invincible: 0,
-    direction: "left", 
-    })
             
   const iterate = (ctx: CanvasRenderingContext2D) => {
     state.current = step(state.current)
     //console.log("iterate ",state.current.pacman.direction)
     state.current.endOfGame = !endOfGame(state.current)
     render(ctx, {
-      pos: posRef.current,
       scale: scaleRef.current,
       cellSize : cellSizeRef.current,
       window : windowRef.current,
