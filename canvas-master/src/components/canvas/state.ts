@@ -145,12 +145,10 @@ const updatePacmanPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacm
   let direction = pacman.direction;
   const speed = 3; // Vitesse de déplacement de Pac-Man, ajustez selon vos besoins
   // Calculer la position de grille de Pac-Man
-  const col = Math.floor(x / cellSize);
-  const row = Math.floor(y / cellSize);
+  let targetX = Math.floor(x / cellSize);
+  let targetY = Math.floor(y / cellSize);
 
   // Déterminer la cellule cible en fonction de la direction
-  let targetX = col;
-  let targetY = row;
   switch (direction) {
     case "up":    targetY -= 1; break;
     case "down":  targetY += 1; break;
@@ -161,6 +159,7 @@ const updatePacmanPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacm
   // Vérifier si la cellule cible est un mur
   if (maze[targetY] && maze[targetY][targetX] === '#') {
     console.log("pacman rencontre un mur")
+    console.log("x = ", targetX, " y = ", targetY)
     return {
       ...pacman,
       coord: { ...pacman.coord, x, y },
