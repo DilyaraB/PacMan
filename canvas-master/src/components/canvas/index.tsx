@@ -1,6 +1,6 @@
 import * as conf from './conf'
 import { useRef, useEffect, useCallback } from 'react'
-import { State, step, click, mouseMove, endOfGame, Window, Pacman } from './state'
+import { State, step, click, mouseMove, endOfGame, generatePieces, generateGhosts } from './state'
 import { render } from './renderer'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
@@ -16,23 +16,21 @@ const initCanvas =
 
 const Canvas = ({ height, width }: { height: number; width: number }) => {
   const initialState: State = {
-    pieces: new Array(20).fill(1).map((_) => ({
-      coord: {
-        x: randomInt(width - 120) + 60,
-        y: randomInt(height - 120) + 60,
-        dx: 4 * randomSign(),
-        dy: 4 * randomSign(),
-      },
-      width : randomInt(30),
-      life: 1
-    })),
+    pieces: generatePieces(
+      conf.maze2, 
+      Math.min(width / conf.maze2[0].length, height / conf.maze2.length)),
+    ghosts : generateGhosts(
+      conf.maze2,
+      Math.min(width / conf.maze2[0].length, height / conf.maze2.length),
+      2),
     pacman: {
       coord: {
-        x: 360,
-        y: 350,
+        x: 380,
+        y: 412,
         dx: 4 * randomSign(),
         dy: 4 * randomSign(),
       },
+      radius: ((Math.min(width / conf.maze2[0].length, height / conf.maze2.length))/2) - 3,
       invincible: 0,
       direction: "right", 
       score: 0
@@ -48,15 +46,13 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
 
   const ref = useRef<any>()
   const state = useRef<State>(initialState)
-  const cellSizeRef = useRef<number>(initialState.cellSize)
-  const windowRef = useRef<Window>(initialState.size)
             
   const iterate = (ctx: CanvasRenderingContext2D) => {
     state.current = step(state.current)
     state.current.endOfGame = !endOfGame(state.current)
     render(ctx, {
-      cellSize : cellSizeRef.current,
-      window : windowRef.current,
+      cellSize : state.current.cellSize,
+      window : state.current.size,
     })(state.current)
     if (!state.current.endOfGame) requestAnimationFrame(() => iterate(ctx))
   }

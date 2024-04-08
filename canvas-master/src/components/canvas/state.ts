@@ -1,19 +1,31 @@
 import * as conf from './conf'
 type Coord = { x: number; y: number; dx: number; dy: number }
 type Size = { height: number; width: number }
-type Piece = { coord: Coord; width: number; life: number}
-export type Window = { height: number; width: number}
 
+type Piece = { 
+  coord: Coord; 
+  radius: number; 
+  life: number
+}
 
 export type Pacman = { 
   coord: Coord; 
+  radius: number;
   invincible?: number; 
   direction: "up" | "down" | "left" | "right";
   score: number;
 }
 
+type Ghost = { 
+  coord: Coord; 
+  radius: number;
+  invincible?: number; 
+  life:number;
+}
+
 export type State = {
   pieces : Array<Piece>
+  ghosts : Array<Ghost>
   pacman : Pacman
   size: Size
   cellSize : number
@@ -89,29 +101,136 @@ const collideBoing = (p1: Coord, p2: Coord) => {
 }
 
 
-const collidePacmanPiece = (pacman: Pacman, piece: Piece) => {
-  // Vérifier si le centre du cercle est à l'intérieur du carré
-  const insideX = pacman.coord.x >= piece.coord.x && pacman.coord.x <= piece.coord.x + piece.width;
-  const insideY = pacman.coord.y >= piece.coord.x && pacman.coord.y <= piece.coord.y + piece.width;
-  if (insideX && insideY) {
-    return true;
+const collidePacmanPiece = (pacman: Pacman, piece: Piece): boolean => {
+  // Calculer la distance entre le centre de Pacman et le centre de la pièce
+  const dx = pacman.coord.x - piece.coord.x;
+  const dy = pacman.coord.y - piece.coord.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Vérifier si la distance est inférieure à la somme des rayons
+  return distance < (pacman.radius + piece.radius);
+};
+
+const collidePacmanGhost = (pacman: Pacman, ghost: Ghost): boolean => {
+  // Calculer la distance entre le centre de Pacman et le centre du fantome
+  const dx = pacman.coord.x - ghost.coord.x;
+  const dy = pacman.coord.y - ghost.coord.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Vérifier si la distance est inférieure à la somme des rayons
+  return distance < (pacman.radius + ghost.radius);
+};
+
+
+const updatePacmanPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (cellSize: number) => {
+  let { x, y } = pacman.coord;
+  const direction = pacman.direction;
+  const speed = 3; // Vitesse de déplacement de Pac-Man
+  const radius = pacman.radius - 2; //On diminue la taille pour faciliter le changement de chemin
+  let collisionDetected = false;
+  const bufferSpace = 5; // Espace supplémentaire entre Pac-Man et le mur
+
+  // Fonction pour vérifier la collision à un point donné dans la direction de Pac-Man
+  const checkCollision = (offsetX: number, offsetY: number): boolean => {
+    // Ajustez pour inclure l'espace tampon dans le calcul de la collision
+    const effectiveX = direction === 'left' ? offsetX - bufferSpace : direction === 'right' ? offsetX + bufferSpace : offsetX;
+    const effectiveY = direction === 'up' ? offsetY - bufferSpace : direction === 'down' ? offsetY + bufferSpace : offsetY;
+    const checkCol = Math.floor((x + effectiveX) / cellSize);
+    const checkRow = Math.floor((y + effectiveY) / cellSize);
+    return maze[checkRow] && maze[checkRow][checkCol] === '#';
+  };
+
+  // Déterminez les points de collision à l'avant de Pac-Man en fonction de la direction
+  const frontOffsets = {
+    "up": [{ x: -radius, y: -radius }, { x: radius, y: -radius }],
+    "down": [{ x: -radius, y: radius }, { x: radius, y: radius }],
+    "left": [{ x: -radius, y: -radius }, { x: -radius, y: radius }],
+    "right": [{ x: radius, y: -radius }, { x: radius, y: radius }]
+  }[direction];
+
+  // Vérifiez la collision dans la direction de Pac-Man
+  collisionDetected = frontOffsets.some(offset => checkCollision(offset.x, offset.y));
+
+  // Calcule la prochaine position de Pac-Man basée sur la direction et la vitesse, s'il n'y a pas de collision détectée
+  if (!collisionDetected) {
+    let nextX = x + (direction === 'right' ? speed : direction === 'left' ? -speed : 0);
+    let nextY = y + (direction === 'down' ? speed : direction === 'up' ? -speed : 0);
+
+    // Mettre à jour les coordonnées de Pac-Man en tenant compte de l'espace tampon avant de vérifier les limites
+    x = Math.max(radius, Math.min(nextX, bound.width - radius));
+    y = Math.max(radius, Math.min(nextY, bound.height - radius));
   }
 
-  // Vérifier si le cercle et le carré se chevauchent
-  let closestX = clamp(pacman.coord.x, piece.coord.x, piece.coord.x + piece.width);
-  let closestY = clamp(pacman.coord.y, piece.coord.y , piece.coord.y + piece.width);
-  let distanceX = pacman.coord.x - closestX;
-  let distanceY = pacman.coord.y - closestY;
-  let distancepiece = distanceX * distanceX + distanceY * distanceY;
-  return distancepiece < (conf.PIECERADIUS * conf.RADIUS);
-}
-
-// Fonction utilitaire pour limiter une valeur à un intervalle
-const clamp = (value: number, min: number, max: number) => {
-  return Math.max(min, Math.min(value, max));
-}
+  return {
+    ...pacman,
+    coord: { ...pacman.coord, x, y },
+  };
+};
 
 
+export const mouseMove =
+  (state: State) =>
+  (event: PointerEvent): State => {
+    return state
+  }
+
+export const endOfGame = (state: State): boolean => state.pieces.length > 0
+
+
+export const generatePieces = (maze: conf.Maze, cellSize: number) => {
+  const pieces = [];
+
+  // Parcourir chaque cellule du labyrinthe
+  for (let row = 0; row < maze.length; row++) {
+    for (let col = 0; col < maze[row].length; col++) {
+      // Si la cellule est vide, placer une pièce
+      if (maze[row][col] === ' ') {
+        // Calculer la position centrale de la cellule pour placer la pièce
+        const centerX = col * cellSize + cellSize / 2;
+        const centerY = row * cellSize + cellSize / 2;
+
+        pieces.push({
+          coord: {
+            x: centerX,
+            y: centerY,
+            dx: 0, 
+            dy: 0,
+          },
+          radius: cellSize/5,
+          life: 1 
+        });
+      }
+    }
+  }
+
+  return pieces;
+};
+
+
+export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts: number): Ghost[] => {
+  const ghosts: Ghost[] = [];
+  
+  // Calculer la position centrale du terrain
+  const centerX = (maze[0].length / 2) * cellSize;
+  const centerY = (maze.length / 2) * cellSize;
+
+  for (let i = 0; i < numberOfGhosts; i++) {
+    ghosts.push({
+      coord: {
+        x: centerX,
+        y: centerY,
+        // Les fantômes peuvent avoir une logique de déplacement différente, donc dx et dy pourraient être ajustés plus tard
+        dx: 0, 
+        dy: 0,
+      },
+      radius: cellSize/2 - 2, // Ajustez selon la taille visuelle souhaitée pour les fantômes
+      life: 1, // La vie des fantômes; ajustez selon le besoin
+      invincible: 0, // Supposons que 'invincible' indique un état spécial; ajustez comme nécessaire
+    });
+  }
+
+  return ghosts;
+};
 
 export const step = (state: State) => {
   
@@ -128,73 +247,3 @@ export const step = (state: State) => {
     pacman : updatePacmanPosition(state.size)(state.maze)(state.pacman)(state.cellSize),
   };
 };
-
-
-function collidePacmanMaze(maze: conf.Maze, newX: number, newY: number, cellSize: number): boolean {
-  const col = Math.floor(newX / cellSize);
-  const row = Math.floor(newY / cellSize);
-
-  if (maze[row] && maze[row][col] !== '#') {
-    return true; // Pas un mur, la position est valide
-  }
-  return false; // Collision avec un mur
-}
-
-const updatePacmanPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (cellSize: number)=>{
-  let { x, y } = pacman.coord;
-  let direction = pacman.direction;
-  const speed = 3; // Vitesse de déplacement de Pac-Man, ajustez selon vos besoins
-  // Calculer la position de grille de Pac-Man
-  let targetX = Math.floor(x / cellSize);
-  let targetY = Math.floor(y / cellSize);
-
-  // Déterminer la cellule cible en fonction de la direction
-  switch (direction) {
-    case "up":    targetY -= 1; break;
-    case "down":  targetY += 1; break;
-    case "left":  targetX -= 1; break;
-    case "right": targetX += 1; break;
-  }
-
-  // Vérifier si la cellule cible est un mur
-  if (maze[targetY] && maze[targetY][targetX] === '#') {
-    console.log("pacman rencontre un mur")
-    console.log("x = ", targetX, " y = ", targetY)
-    return {
-      ...pacman,
-      coord: { ...pacman.coord, x, y },
-    }; // Collision: Pac-Man ne peut pas bouger dans cette direction
-  }
-
-  // // Mettre à jour la position de Pac-Man en fonction de sa direction
-  switch (direction) {
-    case "up":
-      y -= speed;
-      break;
-    case "down":
-      y += speed;
-      break;
-    case "left":
-      x -= speed;
-      break;
-    case "right":
-      x += speed;
-      break;
-  }
-
-  // Assurer que Pac-Man reste dans les limites du jeu
-  x = Math.max(conf.RADIUS, Math.min(x, bound.width - conf.RADIUS));
-  y = Math.max(conf.RADIUS, Math.min(y, bound.height - conf.RADIUS));
-
-  return {
-    ...pacman,
-    coord: { ...pacman.coord, x, y },
-  };
-}
-export const mouseMove =
-  (state: State) =>
-  (event: PointerEvent): State => {
-    return state
-  }
-
-export const endOfGame = (state: State): boolean => state.pieces.length > 0

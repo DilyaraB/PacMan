@@ -51,9 +51,9 @@ function drawPacman
   (ctx: CanvasRenderingContext2D, 
    renderProps: RenderProps,
    { x, y }: { x: number; y: number },
-   direction : String) {
+   direction : String,
+   radius: number) {
 
-  const radius = 20; // Taille de Pac-Man, ajustez selon vos besoins
   const mouthOpenAngle = 0.2 * Math.PI; // Ajustez l'ouverture de la bouche de Pac-Man
   
   // Calculer l'angle de départ et de fin pour la "bouche" de Pac-Man selon sa direction
@@ -91,12 +91,28 @@ const drawPiece = (
   ctx: CanvasRenderingContext2D,
   renderProps: RenderProps,
   { x, y }: { x: number; y: number },
-  width : number,
+  radius : number,
 ) => {
   ctx.beginPath()
   ctx.fillStyle = "yellow"
   ctx.arc(x, y,
-    conf.PIECERADIUS,
+    radius,
+    0,
+    2 * Math.PI
+  )
+  ctx.fill()
+};
+
+const drawGhost = (
+  ctx: CanvasRenderingContext2D,
+  renderProps: RenderProps,
+  { x, y }: { x: number; y: number },
+  radius : number,
+) => {
+  ctx.beginPath()
+  ctx.fillStyle = "red"
+  ctx.arc(x, y,
+    radius,
     0,
     2 * Math.PI
   )
@@ -155,13 +171,21 @@ export const render =
         ctx,
         props,
         c.coord,
-        c.width
+        c.radius
       )
     )
     drawLabyrinth(ctx, props, state.maze)
     diplayGameText(ctx)(state)
-    drawPacman(ctx, props, state.pacman.coord, state.pacman.direction)
+    drawPacman(ctx, props, state.pacman.coord, state.pacman.direction, state.pacman.radius)
     
+    state.ghosts.map((c) =>
+      drawGhost(
+        ctx,
+        props,
+        c.coord,
+        c.radius
+      )
+    )
     if (state.endOfGame) {
       const text = 'END'
       ctx.font = '48px'
