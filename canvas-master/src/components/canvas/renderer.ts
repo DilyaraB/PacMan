@@ -107,16 +107,16 @@ const drawGhost = (
   ctx: CanvasRenderingContext2D,
   renderProps: RenderProps,
   { x, y }: { x: number; y: number },
-  radius : number,
+  radius: number,
+  ghostIndex: number // Index du fantôme pour déterminer la couleur
 ) => {
-  ctx.beginPath()
-  ctx.fillStyle = "red"
-  ctx.arc(x, y,
-    radius,
-    0,
-    2 * Math.PI
-  )
-  ctx.fill()
+  const colors = ["#FF0000", "#FFB8FF", "#00FFFF", "#FFB851"]; // Couleurs des fantômes
+  const color = colors[ghostIndex % colors.length]; // Sélectionner la couleur en bouclant sur l'indice
+
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fill();
 };
 
 
@@ -177,15 +177,11 @@ export const render =
     drawLabyrinth(ctx, props, state.maze)
     diplayGameText(ctx)(state)
     drawPacman(ctx, props, state.pacman.coord, state.pacman.direction, state.pacman.radius)
-    
-    state.ghosts.map((c) =>
-      drawGhost(
-        ctx,
-        props,
-        c.coord,
-        c.radius
-      )
-    )
+
+    state.ghosts.forEach((ghost, index) => {
+      drawGhost(ctx, props, ghost.coord, ghost.radius, index);
+    });
+
     if (state.endOfGame) {
       const text = 'END'
       ctx.font = '48px'

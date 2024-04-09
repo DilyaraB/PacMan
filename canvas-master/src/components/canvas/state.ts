@@ -205,32 +205,60 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
 
   return pieces;
 };
+// export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts: number): Ghost[] => {
+//   const ghosts: Ghost[] = [];
+  
+//   // Calculer la position centrale du terrain
+//   var centerX = (maze[0].length / 2) * cellSize - 10 ;
+//   var centerY = (maze.length / 2) * cellSize;
 
+//   for (let i = 0; i < numberOfGhosts; i++) {
+//     ghosts.push({
+//       coord: {
+//         x: centerX,
+//         y: centerY,
+//         // Les fantômes peuvent avoir une logique de déplacement différente, donc dx et dy pourraient être ajustés plus tard
+//         dx: 0, 
+//         dy: 0,
+//       },
+//       radius: cellSize/2 - 2, // Ajustez selon la taille visuelle souhaitée pour les fantômes
+//       life: 1, // La vie des fantômes; ajustez selon le besoin
+//       invincible: 0, // Supposons que 'invincible' indique un état spécial; ajustez comme nécessaire
+//     });
+//     centerX+=10;
+//   }
 
 export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts: number): Ghost[] => {
   const ghosts: Ghost[] = [];
   
-  // Calculer la position centrale du terrain
-  const centerX = (maze[0].length / 2) * cellSize;
-  const centerY = (maze.length / 2) * cellSize;
+  // Assurez-vous que la position centrale est dans une cellule vide.
+  const centerX =(maze[0].length / 2) * cellSize;
+  const centerY = (maze.length / 2) * cellSize; 
 
+  // Créer des fantômes espacés horizontalement
   for (let i = 0; i < numberOfGhosts; i++) {
+    // Pour chaque fantôme, décaler son emplacement de départ
+    const x = centerX + (i - Math.floor(numberOfGhosts / 2)) * cellSize;
+
     ghosts.push({
       coord: {
-        x: centerX,
+        x: x,
         y: centerY,
-        // Les fantômes peuvent avoir une logique de déplacement différente, donc dx et dy pourraient être ajustés plus tard
         dx: 0, 
         dy: 0,
       },
-      radius: cellSize/2 - 2, // Ajustez selon la taille visuelle souhaitée pour les fantômes
-      life: 1, // La vie des fantômes; ajustez selon le besoin
-      invincible: 0, // Supposons que 'invincible' indique un état spécial; ajustez comme nécessaire
+      radius: cellSize / 2 - 3, // Ajustez selon la taille visuelle souhaitée pour les fantômes
+      life: 1,
+      invincible: 0,
     });
   }
 
   return ghosts;
 };
+
+
+
+  
 
 export const step = (state: State) => {
   

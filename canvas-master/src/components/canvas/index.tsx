@@ -14,7 +14,12 @@ const initCanvas =
     requestAnimationFrame(() => iterate(ctx))
   }
 
+// // Trouvez toutes les cellules vides dans le labyrinthe.
+// const emptyCells = conf.maze2.flatMap((row, rowIndex) =>
+//   row.map((cell, colIndex) => ({ x: colIndex, y: rowIndex })).filter(({ x, y }) => conf.maze2[y][x] === ' ')
+// );
 const Canvas = ({ height, width }: { height: number; width: number }) => {
+
   const initialState: State = {
     pieces: generatePieces(
       conf.maze2, 
@@ -22,11 +27,11 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     ghosts : generateGhosts(
       conf.maze2,
       Math.min(width / conf.maze2[0].length, height / conf.maze2.length),
-      2),
+      3),
     pacman: {
       coord: {
-        x: 380,
-        y: 412,
+        x: 400,
+        y: 487,
         dx: 4 * randomSign(),
         dy: 4 * randomSign(),
       },
