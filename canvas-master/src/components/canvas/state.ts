@@ -1,5 +1,5 @@
 import * as conf from './conf'
-type Coord = { x: number; y: number; dx: number; dy: number }
+type Coord = { x: number; y: number;}
 type Size = { height: number; width: number }
 
 type Piece = { 
@@ -80,25 +80,25 @@ export const click =
 const collide = (o1: Coord, o2: Coord) =>
   dist2(o1, o2) < Math.pow(2 * conf.RADIUS, 2)
 
-const collideBoing = (p1: Coord, p2: Coord) => {
-  const nx = (p2.x - p1.x) / (2 * conf.RADIUS)
-  const ny = (p2.y - p1.y) / (2 * conf.RADIUS)
-  const gx = -ny
-  const gy = nx
+// const collideBoing = (p1: Coord, p2: Coord) => {
+//   const nx = (p2.x - p1.x) / (2 * conf.RADIUS)
+//   const ny = (p2.y - p1.y) / (2 * conf.RADIUS)
+//   const gx = -ny
+//   const gy = nx
 
-  const v1g = gx * p1.dx + gy * p1.dy
-  const v2n = nx * p2.dx + ny * p2.dy
-  const v2g = gx * p2.dx + gy * p2.dy
-  const v1n = nx * p1.dx + ny * p1.dy
-  p1.dx = nx * v2n + gx * v1g
-  p1.dy = ny * v2n + gy * v1g
-  p2.dx = nx * v1n + gx * v2g
-  p2.dy = ny * v1n + gy * v2g
-  p1.x += p1.dx
-  p1.y += p1.dy
-  p2.x += p2.dx
-  p2.y += p2.dy
-}
+//   const v1g = gx * p1.dx + gy * p1.dy
+//   const v2n = nx * p2.dx + ny * p2.dy
+//   const v2g = gx * p2.dx + gy * p2.dy
+//   const v1n = nx * p1.dx + ny * p1.dy
+//   p1.dx = nx * v2n + gx * v1g
+//   p1.dy = ny * v2n + gy * v1g
+//   p2.dx = nx * v1n + gx * v2g
+//   p2.dy = ny * v1n + gy * v2g
+//   p1.x += p1.dx
+//   p1.y += p1.dy
+//   p2.x += p2.dx
+//   p2.y += p2.dy
+// }
 
 
 const collidePacmanPiece = (pacman: Pacman, piece: Piece): boolean => {
@@ -193,8 +193,6 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
           coord: {
             x: centerX,
             y: centerY,
-            dx: 0, 
-            dy: 0,
           },
           radius: cellSize/5,
           life: 1 
@@ -217,9 +215,6 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
 //       coord: {
 //         x: centerX,
 //         y: centerY,
-//         // Les fantômes peuvent avoir une logique de déplacement différente, donc dx et dy pourraient être ajustés plus tard
-//         dx: 0, 
-//         dy: 0,
 //       },
 //       radius: cellSize/2 - 2, // Ajustez selon la taille visuelle souhaitée pour les fantômes
 //       life: 1, // La vie des fantômes; ajustez selon le besoin
@@ -244,10 +239,8 @@ export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts
       coord: {
         x: x,
         y: centerY,
-        dx: 0, 
-        dy: 0,
       },
-      radius: cellSize / 2 - 3, // Ajustez selon la taille visuelle souhaitée pour les fantômes
+      radius: cellSize / 2 - 3,
       life: 1,
       invincible: 0,
     });
@@ -257,8 +250,104 @@ export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts
 };
 
 
+const heuristic = (pointA: Coord, pointB: Coord) => {
+  // Distance Manhattan
+  return Math.abs(pointA.x - pointB.x) + Math.abs(pointA.y - pointB.y);
+}
 
-  
+
+const getNeighbors = (point: Coord, maze: conf.Maze) => {
+  const directions = [
+    { x: 1, y: 0 }, { x: -1, y: 0 }, // Droite, Gauche
+    { x: 0, y: 1 }, { x: 0, y: -1 }  // Bas, Haut
+  ];
+  const neighbors: Coord[] = [];
+
+  for (const direction of directions) {
+    const neighbor = { x: point.x + direction.x, y: point.y + direction.y };
+    if (maze[neighbor.y] && maze[neighbor.y][neighbor.x] === ' ') { // ' ' indique un chemin praticable
+      neighbors.push(neighbor);
+    }
+  }
+  return neighbors;
+}
+
+    
+const aStar = (maze: conf.Maze, start: Coord, goal: Coord) => {
+  const openSet = new Set<Coord>();
+  const cameFrom = new Map<string, Coord>();
+  const gScore = new Map<string, number>();
+  const fScore = new Map<string, number>();
+
+  const pointKey = (p: Coord) => `${p.x},${p.y}`;
+
+  openSet.add(start);
+  gScore.set(pointKey(start), 0);
+  fScore.set(pointKey(start), heuristic(start, goal));
+
+  while (openSet.size > 0) {
+    let current = Array.from(openSet).reduce((a, b) => (fScore.get(pointKey(a)) ?? Infinity) < (fScore.get(pointKey(b)) ?? Infinity) ? a : b);
+
+    if (current.x === goal.x && current.y === goal.y) {
+      const path: Coord[] = [];
+      while (current) {
+        path.unshift(current);
+        current = cameFrom.get(pointKey(current))!;
+      }
+      return path;
+    }
+
+    openSet.delete(current);
+    for (const neighbor of getNeighbors(current, maze)) {
+      const tentativeGScore = (gScore.get(pointKey(current)) ?? Infinity) + 1; // coût uniforme pour chaque déplacement
+      if (tentativeGScore < (gScore.get(pointKey(neighbor)) ?? Infinity)) {
+        cameFrom.set(pointKey(neighbor), current);
+        gScore.set(pointKey(neighbor), tentativeGScore);
+        fScore.set(pointKey(neighbor), tentativeGScore + heuristic(neighbor, goal));
+        openSet.add(neighbor);
+      }
+    }
+  }
+
+  return []; // Aucun chemin trouvé
+}
+   
+// Conversion de coordonnées pixel en coordonnées de grille
+const pixelToGrid = (pixelCoord: number, cellSize: number): number => {
+  return Math.floor(pixelCoord / cellSize);
+};
+
+const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghost: Ghost) => (cellSize: number): Ghost => {
+  let gridX = pixelToGrid(ghost.coord.x, cellSize);
+  let gridY = pixelToGrid(ghost.coord.y, cellSize);
+  let pacmanGridX = pixelToGrid(pacman.coord.x, cellSize);
+  let pacmanGridY = pixelToGrid(pacman.coord.y, cellSize);
+
+  const start = { x: gridX, y: gridY };
+  const goal = { x: pacmanGridX, y: pacmanGridY };
+
+  const path = aStar(maze, start, goal);  // Utiliser les coordonnées de grille pour A*
+  if (path.length > 1) {
+    const nextPosition = path[1];  // Prochaine position en coordonnées de grille
+    const nextPixelX = nextPosition.x * cellSize + cellSize / 2; // Convertir en pixels pour le placement
+    const nextPixelY = nextPosition.y * cellSize + cellSize / 2;
+
+    ghost.coord.x = nextPixelX;
+    ghost.coord.y = nextPixelY;
+  }
+
+  return {
+    ...ghost,
+    coord: { ...ghost.coord },
+  };
+};
+
+export const updateGhostsPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghosts: Ghost[]) => (cellSize: number): Ghost[] => {
+  return ghosts.map(ghost => updateGhostPosition(bound)(maze)(pacman)(ghost)(cellSize));
+};
+
+
+
 
 export const step = (state: State) => {
   
@@ -273,5 +362,6 @@ export const step = (state: State) => {
     ...state,
     pieces: state.pieces.filter((p) => p.life > 0),
     pacman : updatePacmanPosition(state.size)(state.maze)(state.pacman)(state.cellSize),
+    ghosts: updateGhostsPosition(state.size)(state.maze)(state.pacman)(state.ghosts)(state.cellSize),
   };
 };

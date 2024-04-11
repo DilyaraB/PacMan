@@ -31,9 +31,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     pacman: {
       coord: {
         x: 400,
-        y: 487,
-        dx: 4 * randomSign(),
-        dy: 4 * randomSign(),
+        y: 570,
       },
       radius: ((Math.min(width / conf.maze2[0].length, height / conf.maze2.length))/2) - 3,
       invincible: 0,

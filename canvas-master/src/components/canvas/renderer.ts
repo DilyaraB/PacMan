@@ -148,7 +148,7 @@ const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.fillText(
     `Score: ${state.pacman.score}`, // Affiche le score
     20, // Position X du texte (à gauche de l'écran)
-    state.cellSize * state.maze.length + 45 // Position Y du texte
+    state.cellSize * state.maze.length + 4// Position Y du texte
   )
 }
 
@@ -175,13 +175,11 @@ export const render =
       )
     )
     drawLabyrinth(ctx, props, state.maze)
-    diplayGameText(ctx)(state)
     drawPacman(ctx, props, state.pacman.coord, state.pacman.direction, state.pacman.radius)
-
     state.ghosts.forEach((ghost, index) => {
       drawGhost(ctx, props, ghost.coord, ghost.radius, index);
     });
-
+    diplayGameText(ctx)(state)
     if (state.endOfGame) {
       const text = 'END'
       ctx.font = '48px'
