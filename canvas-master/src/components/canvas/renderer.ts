@@ -142,6 +142,12 @@ const drawLabyrinth = (
   });
 };
 
+const displayWindow = (ctx: CanvasRenderingContext2D,
+  x1: number,  y1: number, larg : number, haut : number,
+) => {
+  ctx.strokeRect(x1, y1, larg, haut)
+}
+
 const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '56px arial'
   ctx.fillStyle = 'black'
@@ -152,10 +158,14 @@ const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   )
 }
 
-const displayWindow = (ctx: CanvasRenderingContext2D,
-  x1: number,  y1: number, larg : number, haut : number,
-) => {
-  ctx.strokeRect(x1, y1, larg, haut)
+const displayEndText = (ctx: CanvasRenderingContext2D) => (state: State) => {
+  ctx.font = '100px arial'
+  ctx.fillStyle = 'red'
+  ctx.fillText(
+    `GAME OVER`, // Affiche le score
+    state.size.width / 2 - 290,
+    state.size.height / 2
+  )
 }
 
 const computeColor = (life: number, maxLife: number, baseColor: string) =>
@@ -180,9 +190,8 @@ export const render =
       drawGhost(ctx, props, ghost.coord, ghost.radius, index);
     });
     diplayGameText(ctx)(state)
+    //console.log(state.endOfGame)
     if (state.endOfGame) {
-      const text = 'END'
-      ctx.font = '48px'
-      ctx.strokeText(text, state.size.width / 2 - 100, state.size.height / 2)
+      displayEndText(ctx)(state)
     }
   }

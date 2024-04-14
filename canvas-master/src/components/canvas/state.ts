@@ -11,7 +11,7 @@ type Piece = {
 export type Pacman = { 
   coord: Coord; 
   radius: number;
-  invincible?: number; 
+  invincible: number; 
   direction: "up" | "down" | "left" | "right";
   score: number;
 }
@@ -317,6 +317,36 @@ const pixelToGrid = (pixelCoord: number, cellSize: number): number => {
   return Math.floor(pixelCoord / cellSize);
 };
 
+const gridToPixel = (gridCoord: number, cellSize: number): number => {
+  return gridCoord * cellSize + cellSize / 2;
+};
+
+// const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghost: Ghost) => (cellSize: number): Ghost => {
+//   let gridX = pixelToGrid(ghost.coord.x, cellSize);
+//   let gridY = pixelToGrid(ghost.coord.y, cellSize);
+//   let pacmanGridX = pixelToGrid(pacman.coord.x, cellSize);
+//   let pacmanGridY = pixelToGrid(pacman.coord.y, cellSize);
+
+//   const start = { x: gridX, y: gridY };
+//   const goal = { x: pacmanGridX, y: pacmanGridY };
+
+//   const path = aStar(maze, start, goal);  // Utiliser les coordonnées de grille pour A*
+//   if (path.length > 1) {
+//     const nextPosition = path[1];  // Prochaine position en coordonnées de grille
+//     const nextPixelX = nextPosition.x * cellSize + cellSize / 2; // Convertir en pixels pour le placement
+//     const nextPixelY = nextPosition.y * cellSize + cellSize / 2;
+
+//     ghost.coord.x = nextPixelX;
+//     ghost.coord.y = nextPixelY;
+//   }
+
+//   return {
+//     ...ghost,
+//     coord: { ...ghost.coord },
+//   };
+// };
+
+
 const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghost: Ghost) => (cellSize: number): Ghost => {
   let gridX = pixelToGrid(ghost.coord.x, cellSize);
   let gridY = pixelToGrid(ghost.coord.y, cellSize);
@@ -326,21 +356,47 @@ const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacma
   const start = { x: gridX, y: gridY };
   const goal = { x: pacmanGridX, y: pacmanGridY };
 
-  const path = aStar(maze, start, goal);  // Utiliser les coordonnées de grille pour A*
-  if (path.length > 1) {
-    const nextPosition = path[1];  // Prochaine position en coordonnées de grille
-    const nextPixelX = nextPosition.x * cellSize + cellSize / 2; // Convertir en pixels pour le placement
-    const nextPixelY = nextPosition.y * cellSize + cellSize / 2;
+  const path = aStar(maze, start, goal); // Utiliser les coordonnées de grille pour A*
+  const ghostSpeed = 2; // Le fantôme se déplace de 3 pixels à la fois
 
-    ghost.coord.x = nextPixelX;
-    ghost.coord.y = nextPixelY;
+  if (path.length > 1) {
+    const nextPosition = path[1]; // Prochaine position en coordonnées de grille
+    const targetPixelX = gridToPixel(nextPosition.x, cellSize); // Convertir en pixels pour le placement
+    const targetPixelY = gridToPixel(nextPosition.y, cellSize);
+
+    // Calculer la direction du mouvement nécessaire
+    const deltaX = targetPixelX - ghost.coord.x;
+    const deltaY = targetPixelY - ghost.coord.y;
+
+    // Déplacer le fantôme par la valeur de 'ghostSpeed' pixels vers la cible
+    if (Math.abs(deltaX) > ghostSpeed) {
+      // Mouvement horizontal
+      ghost.coord.x += Math.sign(deltaX) * ghostSpeed;
+    } else if (Math.abs(deltaX) <= ghostSpeed && deltaX !== 0) {
+      // Aligner parfaitement avec la grille avant de tourner
+      ghost.coord.x = targetPixelX;
+    }
+
+    if (Math.abs(deltaY) > ghostSpeed) {
+      // Mouvement vertical
+      ghost.coord.y += Math.sign(deltaY) * ghostSpeed;
+    } else if (Math.abs(deltaY) <= ghostSpeed && deltaY !== 0) {
+      // Aligner parfaitement avec la grille avant de tourner
+      ghost.coord.y = targetPixelY;
+    }
   }
+
+  // Garantir que le fantôme reste dans les limites
+  ghost.coord.x = Math.max(0, Math.min(ghost.coord.x, bound.width - cellSize));
+  ghost.coord.y = Math.max(0, Math.min(ghost.coord.y, bound.height - cellSize));
 
   return {
     ...ghost,
     coord: { ...ghost.coord },
   };
 };
+
+
 
 export const updateGhostsPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghosts: Ghost[]) => (cellSize: number): Ghost[] => {
   return ghosts.map(ghost => updateGhostPosition(bound)(maze)(pacman)(ghost)(cellSize));
@@ -351,12 +407,31 @@ export const updateGhostsPosition = (bound: Size) => (maze: conf.Maze) => (pacma
 
 export const step = (state: State) => {
   
-  state.pieces.map((p) => { // Utilisation correcte de map pour parcourir les carrés
+  state.ghosts.forEach((ghost) => {
+    if (collidePacmanGhost(state.pacman, ghost)) {
+      if (state.pacman.invincible > 0) {
+        // Gérer le cas où Pac-Man est invincible (par exemple, augmenter le score et "manger" le fantôme)
+        state.pacman.score += 50; // Exemple de score pour avoir mangé un fantôme
+        // Vous pourriez vouloir réinitialiser la position du fantôme ici
+      } else {
+        // Gérer le cas où Pac-Man n'est pas invincible (par exemple, perdre une vie ou terminer le jeu)
+        state.endOfGame = true; // Ou décrémentez le nombre de vies si vous implémentez un système de vies
+       //console.log(state.endOfGame)
+      }
+    }
+  });
+
+  state.pieces.map((p) => { 
     if (collidePacmanPiece(state.pacman, p)) {
       state.pacman.score++;
       p.life--;
     }
   });
+
+  // Décrémenter le temps d'invincibilité
+  if (state.pacman.invincible) {
+    state.pacman.invincible -= 1;
+  }
   
   return {
     ...state,

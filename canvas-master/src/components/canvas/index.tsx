@@ -44,7 +44,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     },
     cellSize: Math.min(width / conf.maze2[0].length, height / conf.maze2.length),
     maze : conf.maze2,
-    endOfGame: true,
+    endOfGame: false,
   }
 
   const ref = useRef<any>()
@@ -52,7 +52,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
             
   const iterate = (ctx: CanvasRenderingContext2D) => {
     state.current = step(state.current)
-    state.current.endOfGame = !endOfGame(state.current)
+    //state.current.endOfGame = !endOfGame(state.current)
     render(ctx, {
       cellSize : state.current.cellSize,
       window : state.current.size,
