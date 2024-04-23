@@ -51,6 +51,7 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   const state = useRef<State>(initialState)
             
   const iterate = (ctx: CanvasRenderingContext2D) => {
+
     state.current = step(state.current)
     //state.current.endOfGame = !endOfGame(state.current)
     render(ctx, {

@@ -6,35 +6,6 @@ const COLORS = {
   BLUE: '#0000ff',
 }
 
-const toDoubleHexa = (n: number) =>
-  n < 16 ? '0' + n.toString(16) : n.toString(16)
-
-export const rgbaTorgb = (rgb: string, alpha = 0) => {
-  let r = 0
-  let g = 0
-  let b = 0
-  if (rgb.startsWith('#')) {
-    const hexR = rgb.length === 7 ? rgb.slice(1, 3) : rgb[1]
-    const hexG = rgb.length === 7 ? rgb.slice(3, 5) : rgb[2]
-    const hexB = rgb.length === 7 ? rgb.slice(5, 7) : rgb[3]
-    r = parseInt(hexR, 16)
-    g = parseInt(hexG, 16)
-    b = parseInt(hexB, 16)
-  }
-  if (rgb.startsWith('rgb')) {
-    const val = rgb.replace(/(rgb)|\(|\)| /g, '')
-    const splitted = val.split(',')
-    r = parseInt(splitted[0])
-    g = parseInt(splitted[1])
-    b = parseInt(splitted[2])
-  }
-
-  r = Math.max(Math.min(Math.floor((1 - alpha) * r + alpha * 255), 255), 0)
-  g = Math.max(Math.min(Math.floor((1 - alpha) * g + alpha * 255), 255), 0)
-  b = Math.max(Math.min(Math.floor((1 - alpha) * b + alpha * 255), 255), 0)
-  return `#${toDoubleHexa(r)}${toDoubleHexa(g)}${toDoubleHexa(b)}`
-}
-
 const clear = (ctx: CanvasRenderingContext2D) => {
   const { height, width } = ctx.canvas
   ctx.fillStyle = 'white'
@@ -92,15 +63,16 @@ const drawPiece = (
   renderProps: RenderProps,
   { x, y }: { x: number; y: number },
   radius : number,
+  invincible : boolean
 ) => {
-  ctx.beginPath()
-  ctx.fillStyle = "yellow"
-  ctx.arc(x, y,
-    radius,
-    0,
-    2 * Math.PI
-  )
-  ctx.fill()
+  ctx.beginPath();
+  ctx.fillStyle = invincible ? "green" : "yellow";
+  const displayRadius = invincible ? radius * 1.5 : radius; // Augmenter le rayon si invincible
+  ctx.arc(x, y, 
+    displayRadius, 
+    0, 
+    2 * Math.PI);
+  ctx.fill();
 };
 
 const drawGhost = (
@@ -108,10 +80,12 @@ const drawGhost = (
   renderProps: RenderProps,
   { x, y }: { x: number; y: number },
   radius: number,
-  ghostIndex: number // Index du fantôme pour déterminer la couleur
+  ghostIndex: number, // Index du fantôme pour déterminer la couleur,
+  invincible : number
 ) => {
   const colors = ["#FF0000", "#FFB8FF", "#00FFFF", "#FFB851"]; // Couleurs des fantômes
-  const color = colors[ghostIndex % colors.length]; // Sélectionner la couleur en bouclant sur l'indice
+  const invincibleColor = "#045DA6"
+  const color = invincible > 0 ? invincibleColor : colors[ghostIndex % colors.length];  // Sélectionner la default couleur en bouclant sur l'indice
 
   ctx.beginPath();
   ctx.fillStyle = color;
@@ -132,7 +106,7 @@ const drawLabyrinth = (
       const y = rowIndex * renderProps.cellSize;
 
       if (cell === '#') {
-        ctx.fillStyle = 'darkblue';
+        ctx.fillStyle = '#0B156A';
         ctx.fillRect(x,y,
           renderProps.cellSize,
           renderProps.cellSize
@@ -150,7 +124,7 @@ const displayWindow = (ctx: CanvasRenderingContext2D,
 
 const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '56px arial'
-  ctx.fillStyle = 'black'
+  ctx.fillStyle = 'white'
   ctx.fillText(
     `Score: ${state.pacman.score}`, // Affiche le score
     20, // Position X du texte (à gauche de l'écran)
@@ -160,7 +134,7 @@ const diplayGameText = (ctx: CanvasRenderingContext2D) => (state: State) => {
 
 const displayEndText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '100px arial'
-  ctx.fillStyle = 'red'
+  ctx.fillStyle = 'white'
   ctx.fillText(
     `GAME OVER`, // Affiche le score
     state.size.width / 2 - 290,
@@ -168,12 +142,11 @@ const displayEndText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   )
 }
 
-const computeColor = (life: number, maxLife: number, baseColor: string) =>
-  rgbaTorgb(baseColor, (maxLife - life) * (1 / maxLife))
-
 export const render =
   (ctx: CanvasRenderingContext2D, props: RenderProps) => (state: State) => {
     clear(ctx)
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     //const {height,  width } = props.window; // Get canvas dimensions
     displayWindow(ctx, 0 , 0 , state.size.width, state.size.height)
     state.pieces.map((c) =>
@@ -181,13 +154,14 @@ export const render =
         ctx,
         props,
         c.coord,
-        c.radius
+        c.radius,
+        c.invincible
       )
     )
     drawLabyrinth(ctx, props, state.maze)
     drawPacman(ctx, props, state.pacman.coord, state.pacman.direction, state.pacman.radius)
     state.ghosts.forEach((ghost, index) => {
-      drawGhost(ctx, props, ghost.coord, ghost.radius, index);
+      drawGhost(ctx, props, ghost.coord, ghost.radius, index, ghost.invincible);
     });
     diplayGameText(ctx)(state)
     //console.log(state.endOfGame)

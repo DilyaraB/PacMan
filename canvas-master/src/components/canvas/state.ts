@@ -5,7 +5,8 @@ type Size = { height: number; width: number }
 type Piece = { 
   coord: Coord; 
   radius: number; 
-  life: number
+  life: number;
+  invincible: boolean
 }
 
 export type Pacman = { 
@@ -18,8 +19,9 @@ export type Pacman = {
 
 type Ghost = { 
   coord: Coord; 
+  initialCoord : Coord;
   radius: number;
-  invincible?: number; 
+  invincible : number; 
   life:number;
 }
 
@@ -36,70 +38,12 @@ export type State = {
 const dist2 = (o1: Coord, o2: Coord) =>
   Math.pow(o1.x - o2.x, 2) + Math.pow(o1.y - o2.y, 2)
 
-// const iterate = (bound: Size) => (ball: Ball) => {
-//   const invincible = ball.invincible ? ball.invincible - 1 : ball.invincible
-//   const coord = ball.coord
-//   const dx =
-//     (coord.x + conf.RADIUS > bound.width || coord.x < conf.RADIUS
-//       ? -coord.dx
-//       : coord.dx) * conf.FRICTION
-//   const dy =
-//     (coord.y + conf.RADIUS > bound.height || coord.y < conf.RADIUS
-//       ? -coord.dy
-//       : coord.dy) * conf.FRICTION
-//   if (Math.abs(dx) + Math.abs(dy) < conf.MINMOVE)
-//     return { ...ball, invincible, coord: { ...coord, dx: 0, dy: 0 } }
-//   return {
-//     ...ball,
-//     invincible,
-//     coord: {
-//       x: coord.x + dx,
-//       y: coord.y + dy,
-//       dx,
-//       dy,
-//     },
-//   }
-// }
-
 export const click =
   (state: State) =>
   (event: PointerEvent): State => {
     const { offsetX, offsetY } = event
-    // const target = state.pos.find(
-    //   (p) =>
-    //     dist2(p.coord, { x: offsetX, y: offsetY, dx: 0, dy: 0 }) <
-    //     Math.pow(conf.RADIUS, 2) + 100
-    // )
-    // if (target) {
-    //   target.coord.dx += Math.random() * 10
-    //   target.coord.dy += Math.random() * 10
-    // }
     return state
   }
-
-const collide = (o1: Coord, o2: Coord) =>
-  dist2(o1, o2) < Math.pow(2 * conf.RADIUS, 2)
-
-// const collideBoing = (p1: Coord, p2: Coord) => {
-//   const nx = (p2.x - p1.x) / (2 * conf.RADIUS)
-//   const ny = (p2.y - p1.y) / (2 * conf.RADIUS)
-//   const gx = -ny
-//   const gy = nx
-
-//   const v1g = gx * p1.dx + gy * p1.dy
-//   const v2n = nx * p2.dx + ny * p2.dy
-//   const v2g = gx * p2.dx + gy * p2.dy
-//   const v1n = nx * p1.dx + ny * p1.dy
-//   p1.dx = nx * v2n + gx * v1g
-//   p1.dy = ny * v2n + gy * v1g
-//   p2.dx = nx * v1n + gx * v2g
-//   p2.dy = ny * v1n + gy * v2g
-//   p1.x += p1.dx
-//   p1.y += p1.dy
-//   p2.x += p2.dx
-//   p2.y += p2.dy
-// }
-
 
 const collidePacmanPiece = (pacman: Pacman, piece: Piece): boolean => {
   // Calculer la distance entre le centre de Pacman et le centre de la pièce
@@ -188,6 +132,8 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
         // Calculer la position centrale de la cellule pour placer la pièce
         const centerX = col * cellSize + cellSize / 2;
         const centerY = row * cellSize + cellSize / 2;
+        //invincible avec la probabilité de 10%
+        const invincible = Math.random() < 0.1;
 
         pieces.push({
           coord: {
@@ -195,38 +141,18 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
             y: centerY,
           },
           radius: cellSize/5,
-          life: 1 
+          life: 1 ,
+          invincible: invincible
         });
       }
     }
   }
-
   return pieces;
 };
-// export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts: number): Ghost[] => {
-//   const ghosts: Ghost[] = [];
-  
-//   // Calculer la position centrale du terrain
-//   var centerX = (maze[0].length / 2) * cellSize - 10 ;
-//   var centerY = (maze.length / 2) * cellSize;
-
-//   for (let i = 0; i < numberOfGhosts; i++) {
-//     ghosts.push({
-//       coord: {
-//         x: centerX,
-//         y: centerY,
-//       },
-//       radius: cellSize/2 - 2, // Ajustez selon la taille visuelle souhaitée pour les fantômes
-//       life: 1, // La vie des fantômes; ajustez selon le besoin
-//       invincible: 0, // Supposons que 'invincible' indique un état spécial; ajustez comme nécessaire
-//     });
-//     centerX+=10;
-//   }
 
 export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts: number): Ghost[] => {
   const ghosts: Ghost[] = [];
-  
-  // Assurez-vous que la position centrale est dans une cellule vide.
+
   const centerX =(maze[0].length / 2) * cellSize;
   const centerY = (maze.length / 2) * cellSize; 
 
@@ -239,6 +165,10 @@ export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts
       coord: {
         x: x,
         y: centerY,
+      },
+      initialCoord: { //pour utiliser quand pacman les mange
+        x: x,
+        y: centerY
       },
       radius: cellSize / 2 - 3,
       life: 1,
@@ -321,32 +251,6 @@ const gridToPixel = (gridCoord: number, cellSize: number): number => {
   return gridCoord * cellSize + cellSize / 2;
 };
 
-// const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghost: Ghost) => (cellSize: number): Ghost => {
-//   let gridX = pixelToGrid(ghost.coord.x, cellSize);
-//   let gridY = pixelToGrid(ghost.coord.y, cellSize);
-//   let pacmanGridX = pixelToGrid(pacman.coord.x, cellSize);
-//   let pacmanGridY = pixelToGrid(pacman.coord.y, cellSize);
-
-//   const start = { x: gridX, y: gridY };
-//   const goal = { x: pacmanGridX, y: pacmanGridY };
-
-//   const path = aStar(maze, start, goal);  // Utiliser les coordonnées de grille pour A*
-//   if (path.length > 1) {
-//     const nextPosition = path[1];  // Prochaine position en coordonnées de grille
-//     const nextPixelX = nextPosition.x * cellSize + cellSize / 2; // Convertir en pixels pour le placement
-//     const nextPixelY = nextPosition.y * cellSize + cellSize / 2;
-
-//     ghost.coord.x = nextPixelX;
-//     ghost.coord.y = nextPixelY;
-//   }
-
-//   return {
-//     ...ghost,
-//     coord: { ...ghost.coord },
-//   };
-// };
-
-
 const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacman) => (ghost: Ghost) => (cellSize: number): Ghost => {
   let gridX = pixelToGrid(ghost.coord.x, cellSize);
   let gridY = pixelToGrid(ghost.coord.y, cellSize);
@@ -403,20 +307,20 @@ export const updateGhostsPosition = (bound: Size) => (maze: conf.Maze) => (pacma
 };
 
 
-
+function resetGhostPosition(ghost : Ghost) {
+  ghost.coord = {...ghost.initialCoord}; // Cloner pour éviter la modification directe
+}
 
 export const step = (state: State) => {
   
   state.ghosts.forEach((ghost) => {
     if (collidePacmanGhost(state.pacman, ghost)) {
       if (state.pacman.invincible > 0) {
-        // Gérer le cas où Pac-Man est invincible (par exemple, augmenter le score et "manger" le fantôme)
-        state.pacman.score += 50; // Exemple de score pour avoir mangé un fantôme
-        // Vous pourriez vouloir réinitialiser la position du fantôme ici
+        state.pacman.score += 50; 
+        resetGhostPosition(ghost);
+        ghost.invincible = 0;
       } else {
-        // Gérer le cas où Pac-Man n'est pas invincible (par exemple, perdre une vie ou terminer le jeu)
-        state.endOfGame = true; // Ou décrémentez le nombre de vies si vous implémentez un système de vies
-       //console.log(state.endOfGame)
+        state.endOfGame = true;
       }
     }
   });
@@ -425,12 +329,19 @@ export const step = (state: State) => {
     if (collidePacmanPiece(state.pacman, p)) {
       state.pacman.score++;
       p.life--;
+      if (p.invincible) {
+        state.pacman.invincible = 150; // Durée de l'invincibilité
+        state.ghosts.forEach(ghost => ghost.invincible = 150); // Rendre les fantômes vulnérables pour que pacman puisse les manger
+      }
     }
   });
 
   // Décrémenter le temps d'invincibilité
   if (state.pacman.invincible) {
     state.pacman.invincible -= 1;
+    state.ghosts.forEach(ghost => {
+      if (ghost.invincible) ghost.invincible -= 1;
+    });
   }
   
   return {
