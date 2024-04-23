@@ -154,7 +154,7 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
             x: centerX,
             y: centerY,
           },
-          radius: cellSize/5,
+          radius: cellSize/6,
           life: 1 ,
           invincible: invincible
         });
