@@ -24,6 +24,7 @@ type Ghost = {
   invincible : number; 
   stepChoice : string;
   life:number;
+  lastDirection?: { x: number; y: number }; //pour fantome qui utilise random mouvement
 }
 
 export type State = {
@@ -245,32 +246,58 @@ const aStar = (maze: conf.Maze, start: Coord, goal: Coord) => {
   return []; // Aucun chemin trouvé
 }
 
-const ambushGoal = (pacman: Pacman, lookahead: number): Coord => {
-  // Détermine la position en avant de Pacman basé sur sa direction
+const ambushGoal = (pacman: Pacman, lookahead: number, maze: conf.Maze, cellSize: number): Coord => {
+  let targetX = pacman.coord.x;
+  let targetY = pacman.coord.y;
+
+  // Ajuster la position cible selon la direction de Pacman et le lookahead
   switch (pacman.direction) {
-    case "up":
-      return { x: pacman.coord.x, y: pacman.coord.y - lookahead };
-    case "down":
-      return { x: pacman.coord.x, y: pacman.coord.y + lookahead };
-    case "left":
-      return { x: pacman.coord.x - lookahead, y: pacman.coord.y };
-    case "right":
-      return { x: pacman.coord.x + lookahead, y: pacman.coord.y };
-    default:
-      return { x: pacman.coord.x, y: pacman.coord.y };
+    case "up": targetY -= lookahead * cellSize; break;
+    case "down": targetY += lookahead * cellSize; break;
+    case "left": targetX -= lookahead * cellSize; break;
+    case "right": targetX += lookahead * cellSize; break;
+  }
+
+  // Convertir en coordonnées de la grille
+  const gridX = Math.floor(targetX / cellSize);
+  const gridY = Math.floor(targetY / cellSize);
+
+  // Vérifier si la cible est dans un mur ou en dehors des limites, et ajuster si nécessaire
+  if (gridY >= 0 && gridY < maze.length && gridX >= 0 && gridX < maze[gridY].length && maze[gridY][gridX] === ' ') {
+    // La cible est dans un espace ouvert et valide
+    return { x: gridX, y: gridY };
+  } else {
+    // Revenir à la position initiale si la position cible n'est pas valide
+    return { x: Math.floor(pacman.coord.x / cellSize), y: Math.floor(pacman.coord.y / cellSize) };
+  }
+};
+
+function randomGoal(ghost: Ghost, maze: conf.Maze): Coord {
+  // Utilisez la dernière direction si elle est définie et valide
+  if (ghost.lastDirection && maze[ghost.coord.y + ghost.lastDirection.y] && maze[ghost.coord.y + ghost.lastDirection.y][ghost.coord.x + ghost.lastDirection.x] === ' ') {
+    return { x: ghost.coord.x + ghost.lastDirection.x, y: ghost.coord.y + ghost.lastDirection.y };
+  } else {
+    // Choisissez une nouvelle direction aléatoire
+    const directions = [
+      { x: 1, y: 0 }, { x: -1, y: 0 },
+      { x: 0, y: 1 }, { x: 0, y: -1 }
+    ];
+    // Mélanger les directions et choisir une nouvelle direction
+    const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+    ghost.lastDirection = randomDirection; // Mémoriser la dernière direction choisie
+
+    const newX = ghost.coord.x + randomDirection.x;
+    const newY = ghost.coord.y + randomDirection.y;
+
+    if (newX >= 0 && newX < maze[0].length && newY >= 0 && newY < maze.length && maze[newY][newX] === ' ') {
+      return { x: newX, y: newY };
+    } else {
+      // Restez à la position actuelle si la direction aléatoire n'est pas valide
+      return { x: ghost.coord.x, y: ghost.coord.y };
+    }
   }
 }
 
-function randomGoal(currentX: number, currentY: number, maze: conf.Maze): Coord {
-  const neighbors = getNeighbors({ x: currentX, y: currentY }, maze);
-  if (neighbors.length > 0) {
-    // Random choix de direction
-    const randomIndex = Math.floor(Math.random() * neighbors.length);
-    return neighbors[randomIndex];
-  } else {
-    return { x: currentX, y: currentY};
-  }
-}
 
    
 // Conversion de coordonnées pixel en coordonnées de grille
@@ -295,11 +322,11 @@ const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacma
       goal = { x: pacmanGridX, y: pacmanGridY };
       break;
     case "ambush":
-      goal = ambushGoal(pacman, 3);
+      goal = ambushGoal(pacman, 3, maze, cellSize);
       break;
     case "random":
-      if (Math.random() < 0.5) {
-        goal = randomGoal(gridX, gridY, maze);
+      if (Math.random() < 0.3) {
+        goal = randomGoal(ghost,maze);
       } else {
         goal = { x: pacmanGridX, y: pacmanGridY };
       }
