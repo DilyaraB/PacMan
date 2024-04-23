@@ -75,23 +75,44 @@ const drawPiece = (
   ctx.fill();
 };
 
-const drawGhost = (
+// const drawGhost = (
+//   ctx: CanvasRenderingContext2D,
+//   renderProps: RenderProps,
+//   { x, y }: { x: number; y: number },
+//   radius: number,
+//   ghostIndex: number, // Index du fantôme pour déterminer la couleur,
+//   invincible : number
+// ) => {
+//   const colors = ["#FF0000", "#FFB8FF", "#00FFFF", "#FFB851"]; // Couleurs des fantômes
+//   const invincibleColor = "#045DA6"
+//   const color = invincible > 0 ? invincibleColor : colors[ghostIndex % colors.length];  // Sélectionner la default couleur en bouclant sur l'indice
+//   console.log("ghost : ", ghostIndex , color)
+//   ctx.beginPath();
+//   ctx.fillStyle = color;
+//   ctx.arc(x, y, radius, 0, 2 * Math.PI);
+//   ctx.fill();
+// };
+
+function drawGhost(
   ctx: CanvasRenderingContext2D,
-  renderProps: RenderProps,
   { x, y }: { x: number; y: number },
   radius: number,
-  ghostIndex: number, // Index du fantôme pour déterminer la couleur,
-  invincible : number
-) => {
-  const colors = ["#FF0000", "#FFB8FF", "#00FFFF", "#FFB851"]; // Couleurs des fantômes
-  const invincibleColor = "#045DA6"
-  const color = invincible > 0 ? invincibleColor : colors[ghostIndex % colors.length];  // Sélectionner la default couleur en bouclant sur l'indice
-  console.log("ghost : ", ghostIndex , color)
-  ctx.beginPath();
-  ctx.fillStyle = color;
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.fill();
-};
+  ghostType: 'pink' | 'red' | 'green',
+  invincible: number
+) {
+  // Choisissez l'image en fonction de l'état invincible et du type de fantôme
+  const ghostImage = invincible > 0 ? conf.ghostImages.edible : conf.ghostImages[ghostType];
+
+  // Assurez-vous que l'image est chargée avant de dessiner
+  if (ghostImage.complete) {
+    ctx.drawImage(ghostImage, x - radius, y - radius, radius * 2, radius * 2);
+  } else {
+    // Si l'image n'est pas encore chargée, ajoutez un gestionnaire d'événement pour la dessiner une fois qu'elle le sera
+    ghostImage.onload = () => {
+      ctx.drawImage(ghostImage, x - radius, y - radius, radius * 2, radius * 2);
+    };
+  }
+}
 
 
 const drawLabyrinth = (
@@ -161,7 +182,7 @@ export const render =
     drawLabyrinth(ctx, props, state.maze)
     drawPacman(ctx, props, state.pacman.coord, state.pacman.direction, state.pacman.radius)
     state.ghosts.forEach((ghost, index) => {
-      drawGhost(ctx, props, ghost.coord, ghost.radius, index, ghost.invincible);
+      drawGhost(ctx, ghost.coord, ghost.radius, ghost.type, ghost.invincible);
     });
     diplayGameText(ctx)(state)
     //console.log(state.endOfGame)

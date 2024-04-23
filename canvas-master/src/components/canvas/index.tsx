@@ -93,12 +93,21 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
 
   useEffect(() => {
 
+    // Préchargement des images de fantômes
+    conf.ghostImages.pink.src = 'images/pink.png';
+    conf.ghostImages.pink.onerror = (error) => {
+      console.error('Failed to load pink ghost image', error);
+    };
+    conf.ghostImages.red.src = 'images/red.png';
+    conf.ghostImages.green.src = 'images/green.png';
+    conf.ghostImages.edible.src = 'images/edible.png';
+
     ref.current.addEventListener('click', onClick)
     ref.current.addEventListener('mousemove', onMove)
     ref.current.addEventListener('mouseup', onClick)
     ref.current.addEventListener('keydown', handleKeyDown)
-    initCanvas(iterate)(ref.current)
-
+    
+    initCanvas(iterate)(ref.current);
     return () => {
       ref.current.removeEventListener('click', onMove)
       ref.current.removeEventListener('mousemove', onMove)

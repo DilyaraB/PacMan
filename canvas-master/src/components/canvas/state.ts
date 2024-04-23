@@ -2,6 +2,8 @@ import * as conf from './conf'
 type Coord = { x: number; y: number;}
 type Size = { height: number; width: number }
 
+
+
 type Piece = { 
   coord: Coord; 
   radius: number; 
@@ -17,14 +19,24 @@ export type Pacman = {
   score: number;
 }
 
+type StepChoice = 'chase' | 'ambush' | 'random';
+type GhostType = 'pink' | 'red' | 'green';
+
+const ghostTypes: Record<StepChoice, GhostType> = {
+  "chase": "red",
+  "ambush": "pink",
+  "random": "green"
+};
+
 type Ghost = { 
   coord: Coord; 
   initialCoord : Coord;
   radius: number;
   invincible : number; 
-  stepChoice : string;
+  stepChoice : StepChoice;
+  type : GhostType;
   life:number;
-  lastDirection?: { x: number; y: number }; //pour fantome qui utilise random mouvement
+  lastDirection?: { x: number; y: number }; //pour fantome qui utilise random movement
 }
 
 export type State = {
@@ -155,33 +167,30 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
 export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts: number): Ghost[] => {
   const ghosts: Ghost[] = [];
 
-  const centerX =(maze[0].length / 2) * cellSize;
-  const centerY = (maze.length / 2) * cellSize; 
-  const stepchoices = ["chase", "ambush", "random"];
+  const centerX = (maze[0].length / 2) * cellSize;
+  const centerY = (maze.length / 2) * cellSize;
+  const stepChoices: StepChoice[] = ["chase", "ambush", "random"];
+  
   // Créer des fantômes espacés horizontalement
   for (let i = 0; i < numberOfGhosts; i++) {
-    // Pour chaque fantôme, décaler son emplacement de départ
     const x = centerX + (i - Math.floor(numberOfGhosts / 2)) * cellSize;
-    const stepChoice = stepchoices[i % stepchoices.length];
-    
+    const stepChoice: StepChoice = stepChoices[i % stepChoices.length];
+    const ghostType: GhostType = ghostTypes[stepChoice];
     ghosts.push({
-      coord: {
-        x: x,
-        y: centerY,
-      },
-      initialCoord: { //pour utiliser quand pacman les mange
-        x: x,
-        y: centerY
-      },
-      radius: cellSize / 2 - 3,
+      coord: { x: x, y: centerY },
+      initialCoord: { x: x, y: centerY },
+      radius: cellSize / 2 - 1,
       invincible: 0,
       stepChoice,
+      type: ghostType,
       life: 1,
+      lastDirection: undefined
     });
   }
 
   return ghosts;
 };
+
 
 
 const heuristic = (pointA: Coord, pointB: Coord) => {

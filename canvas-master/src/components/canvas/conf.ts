@@ -45,3 +45,10 @@ export const maze: Maze= [
     ['#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
     ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#']
   ];
+
+  export const ghostImages = {
+    pink: new Image(),
+    red: new Image(),
+    green: new Image(),
+    edible: new Image()
+  };
