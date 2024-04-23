@@ -86,7 +86,7 @@ const drawGhost = (
   const colors = ["#FF0000", "#FFB8FF", "#00FFFF", "#FFB851"]; // Couleurs des fantômes
   const invincibleColor = "#045DA6"
   const color = invincible > 0 ? invincibleColor : colors[ghostIndex % colors.length];  // Sélectionner la default couleur en bouclant sur l'indice
-
+  console.log("ghost : ", ghostIndex , color)
   ctx.beginPath();
   ctx.fillStyle = color;
   ctx.arc(x, y, radius, 0, 2 * Math.PI);

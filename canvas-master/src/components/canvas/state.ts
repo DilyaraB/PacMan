@@ -22,6 +22,7 @@ type Ghost = {
   initialCoord : Coord;
   radius: number;
   invincible : number; 
+  stepChoice : string;
   life:number;
 }
 
@@ -155,12 +156,13 @@ export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts
 
   const centerX =(maze[0].length / 2) * cellSize;
   const centerY = (maze.length / 2) * cellSize; 
-
+  const stepchoices = ["chase", "ambush", "random"];
   // Créer des fantômes espacés horizontalement
   for (let i = 0; i < numberOfGhosts; i++) {
     // Pour chaque fantôme, décaler son emplacement de départ
     const x = centerX + (i - Math.floor(numberOfGhosts / 2)) * cellSize;
-
+    const stepChoice = stepchoices[i % stepchoices.length];
+    
     ghosts.push({
       coord: {
         x: x,
@@ -171,8 +173,9 @@ export const generateGhosts = (maze: conf.Maze, cellSize: number, numberOfGhosts
         y: centerY
       },
       radius: cellSize / 2 - 3,
-      life: 1,
       invincible: 0,
+      stepChoice,
+      life: 1,
     });
   }
 
@@ -241,6 +244,34 @@ const aStar = (maze: conf.Maze, start: Coord, goal: Coord) => {
 
   return []; // Aucun chemin trouvé
 }
+
+const ambushGoal = (pacman: Pacman, lookahead: number): Coord => {
+  // Détermine la position en avant de Pacman basé sur sa direction
+  switch (pacman.direction) {
+    case "up":
+      return { x: pacman.coord.x, y: pacman.coord.y - lookahead };
+    case "down":
+      return { x: pacman.coord.x, y: pacman.coord.y + lookahead };
+    case "left":
+      return { x: pacman.coord.x - lookahead, y: pacman.coord.y };
+    case "right":
+      return { x: pacman.coord.x + lookahead, y: pacman.coord.y };
+    default:
+      return { x: pacman.coord.x, y: pacman.coord.y };
+  }
+}
+
+function randomGoal(currentX: number, currentY: number, maze: conf.Maze): Coord {
+  const neighbors = getNeighbors({ x: currentX, y: currentY }, maze);
+  if (neighbors.length > 0) {
+    // Random choix de direction
+    const randomIndex = Math.floor(Math.random() * neighbors.length);
+    return neighbors[randomIndex];
+  } else {
+    return { x: currentX, y: currentY};
+  }
+}
+
    
 // Conversion de coordonnées pixel en coordonnées de grille
 const pixelToGrid = (pixelCoord: number, cellSize: number): number => {
@@ -257,9 +288,27 @@ const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacma
   let pacmanGridX = pixelToGrid(pacman.coord.x, cellSize);
   let pacmanGridY = pixelToGrid(pacman.coord.y, cellSize);
 
-  const start = { x: gridX, y: gridY };
-  const goal = { x: pacmanGridX, y: pacmanGridY };
+  let goal;
 
+  switch (ghost.stepChoice) {
+    case "chase":
+      goal = { x: pacmanGridX, y: pacmanGridY };
+      break;
+    case "ambush":
+      goal = ambushGoal(pacman, 3);
+      break;
+    case "random":
+      if (Math.random() < 0.5) {
+        goal = randomGoal(gridX, gridY, maze);
+      } else {
+        goal = { x: pacmanGridX, y: pacmanGridY };
+      }
+      break;
+    default:
+      goal = { x: pacmanGridX, y: pacmanGridY };
+  }
+
+  const start = { x: gridX, y: gridY };
   const path = aStar(maze, start, goal); // Utiliser les coordonnées de grille pour A*
   const ghostSpeed = 2; // Le fantôme se déplace de 3 pixels à la fois
 
