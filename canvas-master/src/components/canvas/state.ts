@@ -84,7 +84,7 @@ const updatePacmanPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacm
   let { x, y } = pacman.coord;
   const direction = pacman.direction;
   const speed = 3; // Vitesse de déplacement de Pac-Man
-  const radius = pacman.radius - 2; //On diminue la taille pour faciliter le changement de chemin
+  const radius = pacman.radius - 3; //On diminue la taille pour faciliter le changement de direction
   let collisionDetected = false;
   const bufferSpace = 5; // Espace supplémentaire entre Pac-Man et le mur
 
@@ -146,8 +146,8 @@ export const generatePieces = (maze: conf.Maze, cellSize: number) => {
         // Calculer la position centrale de la cellule pour placer la pièce
         const centerX = col * cellSize + cellSize / 2;
         const centerY = row * cellSize + cellSize / 2;
-        //invincible avec la probabilité de 10%
-        const invincible = Math.random() < 0.1;
+        //invincible avec la probabilité de 3%
+        const invincible = Math.random() < 0.03;
 
         pieces.push({
           coord: {
@@ -346,7 +346,7 @@ const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacma
 
   const start = { x: gridX, y: gridY };
   const path = aStar(maze, start, goal); // Utiliser les coordonnées de grille pour A*
-  const ghostSpeed = 2; // Le fantôme se déplace de 3 pixels à la fois
+  const ghostSpeed = 2; 
 
   if (path.length > 1) {
     const nextPosition = path[1]; // Prochaine position en coordonnées de grille
@@ -400,12 +400,15 @@ export const step = (state: State) => {
   
   state.ghosts.forEach((ghost) => {
     if (collidePacmanGhost(state.pacman, ghost)) {
-      if (state.pacman.invincible > 0) {
-        state.pacman.score += 50; 
-        resetGhostPosition(ghost);
-        ghost.invincible = 0;
-      } else {
+      if (ghost.invincible == 0){
         state.endOfGame = true;
+      }
+      else{
+        if (state.pacman.invincible > 0) {
+          state.pacman.score += 50; 
+          resetGhostPosition(ghost);
+          ghost.invincible = 0;
+        } 
       }
     }
   });
@@ -415,8 +418,8 @@ export const step = (state: State) => {
       state.pacman.score++;
       p.life--;
       if (p.invincible) {
-        state.pacman.invincible = 150; // Durée de l'invincibilité
-        state.ghosts.forEach(ghost => ghost.invincible = 150); // Rendre les fantômes vulnérables pour que pacman puisse les manger
+        state.pacman.invincible = 800; // Durée de l'invincibilité
+        state.ghosts.forEach(ghost => ghost.invincible = 800); // Rendre les fantômes vulnérables pour que pacman puisse les manger
       }
     }
   });

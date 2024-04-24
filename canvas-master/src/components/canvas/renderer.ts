@@ -100,10 +100,8 @@ function drawGhost(
   ghostType: 'pink' | 'red' | 'green',
   invincible: number
 ) {
-  // Choisissez l'image en fonction de l'état invincible et du type de fantôme
   const ghostImage = invincible > 0 ? conf.ghostImages.edible : conf.ghostImages[ghostType];
 
-  // Assurez-vous que l'image est chargée avant de dessiner
   if (ghostImage.complete) {
     ctx.drawImage(ghostImage, x - radius, y - radius, radius * 2, radius * 2);
   } else {
@@ -111,6 +109,19 @@ function drawGhost(
     ghostImage.onload = () => {
       ctx.drawImage(ghostImage, x - radius, y - radius, radius * 2, radius * 2);
     };
+  }
+  if (invincible > 1 && invincible < 200 && ghostImage === conf.ghostImages.edible) {
+    // Créer un effet de clignotement pour prévenir que le fantôme sera bientôt invincible
+    const blinkInterval = 200; // Durée du clignotement en millisecondes
+    const currentTime = Date.now();
+    if (Math.floor(currentTime / blinkInterval) % 2 === 0) {
+      ctx.drawImage(conf.ghostImages.edible, x - radius, y - radius, radius * 2, radius * 2);
+
+    }
+    else {
+      // Dessiner normalement le fantôme
+      ctx.drawImage(conf.ghostImages[ghostType], x - radius, y - radius, radius * 2, radius * 2);
+    }
   }
 }
 
