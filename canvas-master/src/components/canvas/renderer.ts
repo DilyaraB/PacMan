@@ -156,7 +156,7 @@ const displayWindow = (ctx: CanvasRenderingContext2D,
 
 const diplayScoreText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '32px "Press Start 2P", monospace'
-  ctx.fillStyle = 'white'
+  ctx.fillStyle = 'orange'
   ctx.fillText(
     `Score: ${state.pacman.score}`, // Affiche le score
     20, // Position X du texte (à gauche de l'écran)
@@ -165,8 +165,8 @@ const diplayScoreText = (ctx: CanvasRenderingContext2D) => (state: State) => {
 }
 
 const displayEndText = (ctx: CanvasRenderingContext2D) => (state: State) => {
-  ctx.font = '100px arial'
-  ctx.fillStyle = 'white'
+  ctx.font = '65px "Press Start 2P", monospace'
+  ctx.fillStyle = 'red'
   ctx.fillText(
     `GAME OVER`, // Affiche le score
     state.size.width / 2 - 290,
@@ -195,6 +195,7 @@ export const render =
     state.ghosts.forEach((ghost, index) => {
       drawGhost(ctx, ghost.coord, ghost.radius, ghost.type, ghost.invincible);
     });
+
     diplayScoreText(ctx)(state)
     //console.log(state.endOfGame)
     if (state.endOfGame) {
