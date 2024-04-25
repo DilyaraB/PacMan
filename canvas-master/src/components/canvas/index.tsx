@@ -19,7 +19,7 @@ const initCanvas =
 //   row.map((cell, colIndex) => ({ x: colIndex, y: rowIndex })).filter(({ x, y }) => conf.maze2[y][x] === ' ')
 // );
 const Canvas = ({ height, width }: { height: number; width: number }) => {
-
+  
   const initialState: State = {
     pieces: generatePieces(
       conf.maze2, 
@@ -29,10 +29,9 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
       Math.min(width / conf.maze2[0].length, height / conf.maze2.length),
       3),
     pacman: {
-      coord: {
-        x: 400,
-        y: 560,
-      },
+      coord: findStartPosition(
+        conf.maze2,
+        Math.min(width / conf.maze2[0].length, height / conf.maze2.length)),
       radius: ((Math.min(width / conf.maze2[0].length, height / conf.maze2.length))/2) - 3,
       invincible: 0,
       direction: "right", 
@@ -92,6 +91,9 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   
 
   useEffect(() => {
+    if (ref.current) {
+      ref.current.focus();  // Focus sur le canvas dès que le composant est monté
+    }
 
     // Préchargement des images de fantômes
     conf.ghostImages.pink.src = 'images/pink.png';
@@ -117,5 +119,19 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
   }, [])
   return <canvas tabIndex={0} {...{ height, width, ref }} />
 }
+
+// Fonction pour trouver la position de départ de Pac-Man sur l'avant-dernière ligne du labyrinthe
+const findStartPosition = (maze: conf.Maze, cellSize: number): { x: number; y: number } => {
+  const y = maze.length - 2; // Index de l'avant-dernière ligne
+  for (let x = 0; x < maze[y].length; x++) {
+    if (maze[y][x] === ' ') { // Trouver le premier bloc vide sur cette ligne
+      return {
+        x: x * cellSize + cellSize / 2, // Centrer Pac-Man dans la cellule
+        y: y * cellSize + cellSize / 2
+      };
+    }
+  }
+  throw new Error('No valid starting position found on the second last row of the maze.');
+};
 
 export default Canvas

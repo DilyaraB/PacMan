@@ -6,7 +6,41 @@
 }
 
 body {
+  font-family: 'Press Start 2P', monospace;
   margin: 0;
   padding: 0;
 }
 
+.start-screen {
+  height: 93vh; 
+  max-width: 100vh;
+  margin-left: auto;
+  margin-right: auto;
+  background-image: url('./fond_demarrage.jpg'); /* Chemin de l'image de fond */
+  background-size: cover; /* Couvrir tout l'espace disponible sans redimensionner l'image */
+  background-position: center; /* Centrer l'image dans l'élément */
+  display: flex;
+  align-items: center; /* Centrer le contenu verticalement */
+  justify-content: center; /* Centrer le contenu horizontalement */
+}
+
+
+.start-button {
+  margin-top: 30vh;
+  padding: 10px 20px;
+  font-size: 1.5em;
+  font-family: 'Press Start 2P', cursive; /* Police de style arcade */
+  color: rgb(30, 18, 201); /* Couleur du texte */
+  background-color: #c92424; /* Jaune Pac-Man */
+  border: none;
+  cursor: pointer;
+}
+
+.start-button:hover {
+  background-color: #13943a; /* Un jaune plus foncé lors du survol */
+  transform: scale(1.1); /* Agrandir légèrement le bouton */
+}
+
+.start-button:active {
+  transform: scale(0.9); /* Réduire légèrement le bouton lors du clic */
+}

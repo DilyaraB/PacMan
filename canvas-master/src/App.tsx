@@ -10,6 +10,8 @@ type Size = {
 }
 const App = () => {
   const [size, setSize] = useState<Size | null>(null)
+  const [gameStarted, setGameStarted] = useState(false);
+
   const container = useRef<any>()
   useEffect(() => {
     function updateSize() {
@@ -25,11 +27,26 @@ const App = () => {
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
   }, []);
+
+  const startGame = () => {
+    setGameStarted(true);  // Mettre à jour l'état pour démarrer le jeu
+  };
+
   return (
     <div className="App" ref={container}>
-      {size ? <Canvas {...size} /> : <Loader />}
+      {size ? (
+        gameStarted ? (
+          <Canvas {...size }/>  // Afficher le jeu si démarré
+        ) : (
+          <div className="start-screen">
+            <button className="start-button" onClick={startGame}>Start</button>
+          </div>
+        )
+      ) : (
+        <Loader />  // Afficher le loader si la taille n'est pas encore définie
+      )}
     </div>
-  )
-}
+  );
+};
 
 export default App
