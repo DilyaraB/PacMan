@@ -45,9 +45,11 @@ const App = () => {
     <div className="App" ref={container}>
     {gameOver ? (
       <div className="game-over-screen">
-        <h1>Game Over</h1>
-        <h2>Score: {finalScore}</h2>
-        <button  className="retry-button" onClick={startGame}>Retry</button>
+        <div className="overlay">
+          <h1>Game Over</h1>
+          <h2>Score: {finalScore}</h2>
+          <button  className="retry-button" onClick={startGame}>Retry</button>
+        </div>
       </div>
     ) : (
       size && !gameStarted && (
