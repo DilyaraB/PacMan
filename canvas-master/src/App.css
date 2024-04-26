@@ -11,18 +11,36 @@ body {
   padding: 0;
 }
 
-.start-screen {
-  height: 93vh; 
-  max-width: 100vh;
-  margin-left: auto;
-  margin-right: auto;
+h1 {
+  margin-top: 8%;
+  font-size: 4em;
+  color:#ff0000
+}
+
+h2{
+  font-size: 2.5em;
+  color:#0bff03
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-over-screen, .start-screen {
   background-image: url('./fond_demarrage.jpg'); /* Chemin de l'image de fond */
   background-size: cover; /* Couvrir tout l'espace disponible sans redimensionner l'image */
   background-position: center; /* Centrer l'image dans l'élément */
+  height: 100vh; 
+  max-width: 100vh;
   display: flex;
-  align-items: center; /* Centrer le contenu verticalement */
-  justify-content: center; /* Centrer le contenu horizontalement */
+  flex-direction: column; /* Ceci assure que les éléments s'affichent verticalement */
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
 }
+/* --------------------------------------------------------------------*/
 
 
 .start-button {
@@ -42,5 +60,27 @@ body {
 }
 
 .start-button:active {
+  transform: scale(0.9); /* Réduire légèrement le bouton lors du clic */
+}
+
+/* --------------------------------------------------------------------*/
+
+.retry-button {
+  margin-top: 10vh;
+  padding: 10px 20px;
+  font-size: 1.5em;
+  font-family: 'Press Start 2P', cursive; /* Police de style arcade */
+  color: rgb(30, 18, 201); /* Couleur du texte */
+  background-color: #c92424; /* Jaune Pac-Man */
+  border: none;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background-color: #13943a; /* Un jaune plus foncé lors du survol */
+  transform: scale(1.1); /* Agrandir légèrement le bouton */
+}
+
+.retry-button:active {
   transform: scale(0.9); /* Réduire légèrement le bouton lors du clic */
 }

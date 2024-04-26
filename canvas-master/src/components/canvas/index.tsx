@@ -18,7 +18,7 @@ const initCanvas =
 // const emptyCells = conf.maze2.flatMap((row, rowIndex) =>
 //   row.map((cell, colIndex) => ({ x: colIndex, y: rowIndex })).filter(({ x, y }) => conf.maze2[y][x] === ' ')
 // );
-const Canvas = ({ height, width }: { height: number; width: number }) => {
+const Canvas = ({ height, width, onGameOver }: { height: number; width: number; onGameOver: (score: number) => void }) => {
   
   const initialState: State = {
     pieces: generatePieces(
@@ -57,7 +57,13 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
       cellSize : state.current.cellSize,
       window : state.current.size,
     })(state.current)
-    if (!state.current.endOfGame) requestAnimationFrame(() => iterate(ctx))
+    if (state.current.endOfGame) {
+      setTimeout(() => {
+        onGameOver(state.current.pacman.score); // Appeler onGameOver après un délai
+      }, 4000); // Délai de 4 secondes
+      return; // Arrêter la boucle d'animation
+    }
+    requestAnimationFrame(() => iterate(ctx));
   }
 
   const onClick = (e: PointerEvent) => {
@@ -111,10 +117,12 @@ const Canvas = ({ height, width }: { height: number; width: number }) => {
     
     initCanvas(iterate)(ref.current);
     return () => {
-      ref.current.removeEventListener('click', onMove)
-      ref.current.removeEventListener('mousemove', onMove)
-      ref.current.removeEventListener('mouseup', onClick)
-      ref.current.removeEventListener('keydown', handleKeyDown)
+      if (ref.current) {
+        ref.current.removeEventListener('click', onClick);
+        ref.current.removeEventListener('mousemove', onMove);
+        ref.current.removeEventListener('mouseup', onClick);
+        ref.current.removeEventListener('keydown', handleKeyDown);
+      }
     }
   }, [])
   return <canvas tabIndex={0} {...{ height, width, ref }} />

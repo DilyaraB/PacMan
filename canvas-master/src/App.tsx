@@ -11,6 +11,8 @@ type Size = {
 const App = () => {
   const [size, setSize] = useState<Size | null>(null)
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
 
   const container = useRef<any>()
   useEffect(() => {
@@ -29,23 +31,36 @@ const App = () => {
   }, []);
 
   const startGame = () => {
-    setGameStarted(true);  // Mettre à jour l'état pour démarrer le jeu
+    setGameStarted(true);
+    setGameOver(false); 
+  };
+
+  const handleGameOver = (score: number) => {
+    setFinalScore(score); // Stockez le score dans un état pour l'afficher sur l'écran de game over
+    setGameStarted(false);
+    setGameOver(true);
   };
 
   return (
     <div className="App" ref={container}>
-      {size ? (
-        gameStarted ? (
-          <Canvas {...size }/>  // Afficher le jeu si démarré
-        ) : (
-          <div className="start-screen">
-            <button className="start-button" onClick={startGame}>Start</button>
-          </div>
-        )
-      ) : (
-        <Loader />  // Afficher le loader si la taille n'est pas encore définie
-      )}
-    </div>
+    {gameOver ? (
+      <div className="game-over-screen">
+        <h1>Game Over</h1>
+        <h2>Score: {finalScore}</h2>
+        <button  className="retry-button" onClick={startGame}>Retry</button>
+      </div>
+    ) : (
+      size && !gameStarted && (
+        <div className="start-screen">
+          <button className="start-button" onClick={startGame}>Start</button>
+        </div>
+      )
+    )}
+
+    {size && gameStarted && <Canvas {...size} onGameOver={handleGameOver} />}
+
+    {!size && <Loader />}
+  </div>
   );
 };
 
