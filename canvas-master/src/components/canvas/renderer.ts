@@ -1,5 +1,6 @@
 import * as conf from './conf'
-import { State, Pacman } from './state'
+import { State } from './state'
+
 const COLORS = {
   RED: '#ff0000',
   GREEN: '#008800',

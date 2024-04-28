@@ -1,6 +1,8 @@
 import * as conf from './conf'
 import { useRef, useEffect, useCallback } from 'react'
-import { State, step, click, mouseMove, endOfGame, generatePieces, generateGhosts } from './state'
+import { State, step, mouseMove, generatePieces} from './state'
+import { findPacmanStartPosition } from './state_pacman'
+import { generateGhosts } from './state_ghost'
 import { render } from './renderer'
 
 const randomInt = (max: number) => Math.floor(Math.random() * max)
@@ -29,7 +31,7 @@ const Canvas = ({ height, width, onGameOver }: { height: number; width: number; 
       Math.min(width / conf.maze2[0].length, height / conf.maze2.length),
       3),
     pacman: {
-      coord: findStartPosition(
+      coord: findPacmanStartPosition(
         conf.maze2,
         Math.min(width / conf.maze2[0].length, height / conf.maze2.length)),
       radius: ((Math.min(width / conf.maze2[0].length, height / conf.maze2.length))/2) - 3,
@@ -52,7 +54,6 @@ const Canvas = ({ height, width, onGameOver }: { height: number; width: number; 
   const iterate = (ctx: CanvasRenderingContext2D) => {
 
     state.current = step(state.current)
-    //state.current.endOfGame = !endOfGame(state.current)
     render(ctx, {
       cellSize : state.current.cellSize,
       window : state.current.size,
@@ -60,18 +61,10 @@ const Canvas = ({ height, width, onGameOver }: { height: number; width: number; 
     if (state.current.endOfGame) {
       setTimeout(() => {
         onGameOver(state.current.pacman.score); // Appeler onGameOver après un délai
-      }, 4000); // Délai de 4 secondes
+      }, 1000); // Délai de 2 secondes
       return; // Arrêter la boucle d'animation
     }
     requestAnimationFrame(() => iterate(ctx));
-  }
-
-  const onClick = (e: PointerEvent) => {
-    state.current = click(state.current)(e)
-  }
-
-  const onMove = (e: PointerEvent) => {
-    state.current = mouseMove(state.current)(e)
   }
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -110,36 +103,16 @@ const Canvas = ({ height, width, onGameOver }: { height: number; width: number; 
     conf.ghostImages.green.src = 'images/green.png';
     conf.ghostImages.edible.src = 'images/edible.png';
 
-    ref.current.addEventListener('click', onClick)
-    ref.current.addEventListener('mousemove', onMove)
-    ref.current.addEventListener('mouseup', onClick)
     ref.current.addEventListener('keydown', handleKeyDown)
     
     initCanvas(iterate)(ref.current);
     return () => {
       if (ref.current) {
-        ref.current.removeEventListener('click', onClick);
-        ref.current.removeEventListener('mousemove', onMove);
-        ref.current.removeEventListener('mouseup', onClick);
         ref.current.removeEventListener('keydown', handleKeyDown);
       }
     }
   }, [])
   return <canvas tabIndex={0} {...{ height, width, ref }} />
 }
-
-// Fonction pour trouver la position de départ de Pac-Man sur l'avant-dernière ligne du labyrinthe
-const findStartPosition = (maze: conf.Maze, cellSize: number): { x: number; y: number } => {
-  const y = maze.length - 2; // Index de l'avant-dernière ligne
-  for (let x = 0; x < maze[y].length; x++) {
-    if (maze[y][x] === ' ') { // Trouver le premier bloc vide sur cette ligne
-      return {
-        x: x * cellSize + cellSize / 2, // Centrer Pac-Man dans la cellule
-        y: y * cellSize + cellSize / 2
-      };
-    }
-  }
-  throw new Error('No valid starting position found on the second last row of the maze.');
-};
 
 export default Canvas
