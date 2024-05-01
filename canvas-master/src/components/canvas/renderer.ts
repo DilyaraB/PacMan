@@ -21,16 +21,16 @@ export type RenderProps = {
 
 function drawPacman
   (ctx: CanvasRenderingContext2D, 
-   renderProps: RenderProps,
    { x, y }: { x: number; y: number },
    direction : String,
    radius: number) {
 
-  const mouthOpenAngle = 0.2 * Math.PI; // Ajustez l'ouverture de la bouche de Pac-Man
+  const mouthOpenAngle = 0.2 * Math.PI; 
   
-  // Calculer l'angle de départ et de fin pour la "bouche" de Pac-Man selon sa direction
-  let startAngle = 0.5 * Math.PI; // Angle de départ par défaut (vers le haut)
-  let endAngle = 2.5 * Math.PI; // Angle de fin par défaut
+  // angle de départ et de fin par défaut
+  let startAngle = 0.5 * Math.PI;
+  let endAngle = 2.5 * Math.PI; 
+
   switch(direction) {
     case "right":
       startAngle = -mouthOpenAngle;
@@ -50,11 +50,10 @@ function drawPacman
       break;
   }
 
-  // Dessiner Pac-Man
   ctx.beginPath();
-  ctx.arc(x, y, radius, endAngle,startAngle, false); // Corps de Pac-Man
-  ctx.lineTo(x, y); // Revenir au centre pour fermer la bouche
-  ctx.fillStyle = "yellow"; // La couleur de Pac-Man
+  ctx.arc(x, y, radius, endAngle,startAngle, false); 
+  ctx.lineTo(x, y); // reviens au centre pour fermer la bouche
+  ctx.fillStyle = "yellow";
   ctx.fill();
   ctx.closePath();
 }
@@ -75,24 +74,6 @@ const drawPiece = (
     2 * Math.PI);
   ctx.fill();
 };
-
-// const drawGhost = (
-//   ctx: CanvasRenderingContext2D,
-//   renderProps: RenderProps,
-//   { x, y }: { x: number; y: number },
-//   radius: number,
-//   ghostIndex: number, // Index du fantôme pour déterminer la couleur,
-//   invincible : number
-// ) => {
-//   const colors = ["#FF0000", "#FFB8FF", "#00FFFF", "#FFB851"]; // Couleurs des fantômes
-//   const invincibleColor = "#045DA6"
-//   const color = invincible > 0 ? invincibleColor : colors[ghostIndex % colors.length];  // Sélectionner la default couleur en bouclant sur l'indice
-//   console.log("ghost : ", ghostIndex , color)
-//   ctx.beginPath();
-//   ctx.fillStyle = color;
-//   ctx.arc(x, y, radius, 0, 2 * Math.PI);
-//   ctx.fill();
-// };
 
 function drawGhost(
   ctx: CanvasRenderingContext2D,
@@ -159,9 +140,9 @@ const diplayScoreText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '32px "Press Start 2P", monospace'
   ctx.fillStyle = 'orange'
   ctx.fillText(
-    `Score: ${state.pacman.score}`, // Affiche le score
-    20, // Position X du texte (à gauche de l'écran)
-    state.cellSize * state.maze.length - 9// Position Y du texte
+    `Score: ${state.pacman.score}`, 
+    20, 
+    state.cellSize * state.maze.length - 9
   )
 }
 
@@ -169,7 +150,7 @@ const displayEndText = (ctx: CanvasRenderingContext2D) => (state: State) => {
   ctx.font = '65px "Press Start 2P", monospace'
   ctx.fillStyle = 'red'
   ctx.fillText(
-    `GAME OVER`, // Affiche le score
+    `GAME OVER`,
     state.size.width / 2 - 290,
     state.size.height / 2
   )
@@ -192,8 +173,8 @@ export const render =
       )
     )
     drawLabyrinth(ctx, props, state.maze)
-    drawPacman(ctx, props, state.pacman.coord, state.pacman.direction, state.pacman.radius)
-    state.ghosts.forEach((ghost, index) => {
+    drawPacman(ctx, state.pacman.coord, state.pacman.direction, state.pacman.radius)
+    state.ghosts.forEach((ghost) => {
       drawGhost(ctx, ghost.coord, ghost.radius, ghost.type, ghost.invincible);
     });
 

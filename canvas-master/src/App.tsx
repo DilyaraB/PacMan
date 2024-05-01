@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from 'react'
-import Loader from './components/loader'
 import Canvas from './components/canvas'
 import './App.css'
 import * as conf from './components/canvas/conf'
@@ -19,10 +18,10 @@ const App = () => {
     function updateSize() {
       const height = container.current?.clientHeight ?? 0;
       const width = container.current?.clientWidth ?? 0;
-      const cellSize = Math.min(width / conf.maze2[0].length, height / conf.maze2.length);
+      const cellSize = Math.min(width / conf.maze[0].length, height / conf.maze.length);
       setSize({
-        height: cellSize * conf.maze2.length,
-        width: cellSize * conf.maze2[0].length,
+        height: cellSize * conf.maze.length,
+        width: cellSize * conf.maze[0].length,
       });
     }
     window.addEventListener('resize', updateSize);
@@ -61,7 +60,7 @@ const App = () => {
 
     {size && gameStarted && <Canvas {...size} onGameOver={handleGameOver} />}
 
-    {!size && <Loader />}
+    {!size }
   </div>
   );
 };

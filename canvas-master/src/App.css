@@ -28,13 +28,13 @@ h2{
 }
 
 .game-over-screen, .start-screen {
-  background-image: url('./fond_demarrage.jpg'); /* Chemin de l'image de fond */
-  background-size: cover; /* Couvrir tout l'espace disponible sans redimensionner l'image */
-  background-position: center; /* Centrer l'image dans l'élément */
+  background-image: url('./fond_demarrage.jpg'); 
+  background-size: cover; 
+  background-position: center; 
   height: 100vh; 
   max-width: 100vh;
   display: flex;
-  flex-direction: column; /* Ceci assure que les éléments s'affichent verticalement */
+  flex-direction: column; 
   align-items: center;
   justify-content: center;
   margin-left: auto;
@@ -47,20 +47,20 @@ h2{
   margin-top: 30vh;
   padding: 10px 20px;
   font-size: 1.5em;
-  font-family: 'Press Start 2P', cursive; /* Police de style arcade */
-  color: rgb(30, 18, 201); /* Couleur du texte */
-  background-color: #c92424; /* Jaune Pac-Man */
+  font-family: 'Press Start 2P', cursive;
+  color: rgb(30, 18, 201);
+  background-color: #c92424; 
   border: none;
   cursor: pointer;
 }
 
 .start-button:hover {
-  background-color: #13943a; /* Un jaune plus foncé lors du survol */
-  transform: scale(1.1); /* Agrandir légèrement le bouton */
+  background-color: #13943a; 
+  transform: scale(1.1); 
 }
 
 .start-button:active {
-  transform: scale(0.9); /* Réduire légèrement le bouton lors du clic */
+  transform: scale(0.9);
 }
 
 /* --------------------------------------------------------------------*/
@@ -69,9 +69,9 @@ h2{
   margin-top: 5vh;
   padding: 10px 20px;
   font-size: 1.5em;
-  font-family: 'Press Start 2P', cursive; /* Police de style arcade */
-  color: rgb(30, 18, 201); /* Couleur du texte */
-  background-color: #c92424; /* Jaune Pac-Man */
+  font-family: 'Press Start 2P', cursive; 
+  color: rgb(30, 18, 201); 
+  background-color: #c92424; 
   border: none;
   cursor: pointer;
 }
@@ -87,8 +87,8 @@ h2{
 
 .overlay {
   padding: 20px;
-  background-color: rgba(0, 0, 0, 0.7); /* Noir avec 50% de transparence */
+  background-color: rgba(0, 0, 0, 0.7); 
   text-align: center;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Ombre douce pour un effet 3D */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
 }

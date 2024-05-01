@@ -24,36 +24,23 @@ export type State = {
   endOfGame: boolean
 }
 
-const dist2 = (o1: Coord, o2: Coord) =>
-  Math.pow(o1.x - o2.x, 2) + Math.pow(o1.y - o2.y, 2)
-
 
 const collidePacmanPiece = (pacman: Pacman, piece: Piece): boolean => {
-  // Calculer la distance entre le centre de Pacman et le centre de la pièce
   const dx = pacman.coord.x - piece.coord.x;
   const dy = pacman.coord.y - piece.coord.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // Vérifier si la distance est inférieure à la somme des rayons
   return distance < (pacman.radius + piece.radius);
 };
 
 const collidePacmanGhost = (pacman: Pacman, ghost: Ghost): boolean => {
-  // Calculer la distance entre le centre de Pacman et le centre du fantome
   const dx = pacman.coord.x - ghost.coord.x;
   const dy = pacman.coord.y - ghost.coord.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // Vérifier si la distance est inférieure à la somme des rayons
   return distance < (pacman.radius + ghost.radius);
 };
 
-
-export const mouseMove =
-  (state: State) =>
-  (event: PointerEvent): State => {
-    return state
-  }
 
 export const endOfGame = (state: State): boolean => state.pieces.length > 0
 
@@ -61,15 +48,13 @@ export const endOfGame = (state: State): boolean => state.pieces.length > 0
 export const generatePieces = (maze: conf.Maze, cellSize: number) => {
   const pieces = [];
 
-  // Parcourir chaque cellule du labyrinthe
   for (let row = 0; row < maze.length; row++) {
     for (let col = 0; col < maze[row].length; col++) {
-      // Si la cellule est vide, placer une pièce
       if (maze[row][col] === ' ') {
-        // Calculer la position centrale de la cellule pour placer la pièce
+        // position centrale de la cellule pour placer la pièce
         const centerX = col * cellSize + cellSize / 2;
         const centerY = row * cellSize + cellSize / 2;
-        //invincible avec la probabilité de 3%
+        //piece invincible = gommes
         const invincible = Math.random() < 0.03;
 
         pieces.push({
@@ -110,13 +95,12 @@ export const step = (state: State) => {
       state.pacman.score++;
       p.life--;
       if (p.invincible) {
-        state.pacman.invincible = 800; // Durée de l'invincibilité
-        state.ghosts.forEach(ghost => ghost.invincible = 800); // Rendre les fantômes vulnérables pour que pacman puisse les manger
+        state.pacman.invincible = conf.ghostInvisibleTime; 
+        state.ghosts.forEach(ghost => ghost.invincible = conf.ghostInvisibleTime); 
       }
     }
   });
 
-  // Décrémenter le temps d'invincibilité
   if (state.pacman.invincible) {
     state.pacman.invincible -= 1;
     state.ghosts.forEach(ghost => {
