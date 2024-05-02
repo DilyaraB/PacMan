@@ -143,8 +143,6 @@ const gridToPixel = (gridCoord: number, cellSize: number): number => {
   return gridCoord * cellSize + cellSize / 2;
 };
 
-
-
 const ambushGoal = (pacman: Pacman, lookahead: number, maze: conf.Maze, cellSize: number): Coord => {
   let targetX = pacman.coord.x;
   let targetY = pacman.coord.y;
@@ -168,33 +166,48 @@ const ambushGoal = (pacman: Pacman, lookahead: number, maze: conf.Maze, cellSize
   }
 };
 
-function randomGoal(ghost: Ghost, pacman: Pacman,  maze: conf.Maze, cellSize: number): Coord {
-  
-  // utilise dernière direction si valide
-  if (ghost.lastDirection && maze[ghost.coord.y + ghost.lastDirection.y] && maze[ghost.coord.y + ghost.lastDirection.y][ghost.coord.x + ghost.lastDirection.x] === ' ') {
-    return { x: ghost.coord.x + ghost.lastDirection.x, y: ghost.coord.y + ghost.lastDirection.y };
-  } else {
-  
-    const directions = [
-      { x: 1, y: 0 }, { x: -1, y: 0 },
-      { x: 0, y: 1 }, { x: 0, y: -1}
-    ];
-    // Choisit une direction au hasard
-    const randomDirection = directions[Math.floor(Math.random() * directions.length)];
-    ghost.lastDirection = randomDirection;
+function randomGoal(ghost: Ghost, pacman: Pacman, maze: conf.Maze, cellSize: number): Coord {
 
-    const newX = (ghost.coord.x + randomDirection.x) * cellSize;
-    const newY = (ghost.coord.y + randomDirection.y) * cellSize;
+  if (ghost.lastDirection) {
+    console.log('last direction: valid');
 
-    const gridX = pixelToGrid(newX , cellSize);
-    const gridY = pixelToGrid(newY , cellSize);
+    const newX = ghost.coord.x + ghost.lastDirection.x * cellSize;
+    const newY = ghost.coord.y + ghost.lastDirection.y * cellSize;
 
-    if (gridY >= 0 && gridY < maze.length && gridX >= 0 && gridX < maze[gridY].length && maze[gridY][gridX] === ' ') {
+    const gridX = pixelToGrid(newX, cellSize);
+    const gridY = pixelToGrid(newY, cellSize);
+
+    //to move to new position based on lastDirection
+    if (maze[gridY] && gridX >= 0 && gridX < maze[gridY].length && maze[gridY][gridX] === ' ') {
       return { x: gridX, y: gridY };
-    } else {
-      return { x: pixelToGrid(pacman.coord.x , cellSize), y: pixelToGrid(pacman.coord.y , cellSize) };
+    }else{
+      
+      //last direction blocked, selecting a new random direction
+      const directions = [
+        { x: 1, y: 0 }, { x: -1, y: 0 },
+        { x: 0, y: 1 }, { x: 0, y: -1 }
+      ];
+
+      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+      ghost.lastDirection = randomDirection;
+
+      const newX = ghost.coord.x + randomDirection.x * cellSize;
+      const newY = ghost.coord.y + randomDirection.y * cellSize;
+
+      const gridX = pixelToGrid(newX, cellSize);
+      const gridY = pixelToGrid(newY, cellSize);
+
+      if (maze[gridY] && gridX >= 0 && gridX < maze[gridY].length && maze[gridY][gridX] === ' ') {
+        console.log('yesssss')
+        return { x: gridX, y: gridY };
+      }
     }
+  } 
+
+  if (!ghost.lastDirection) {
+    ghost.lastDirection = { x: -1, y: 0 } //pour sortir de la maison au debut du jeu 
   }
+  return { x: pixelToGrid(pacman.coord.x, cellSize), y: pixelToGrid(pacman.coord.y, cellSize) };
 }
 
 
@@ -214,11 +227,12 @@ const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacma
       goal = ambushGoal(pacman, conf.AmbushGoalLookAhead, maze, cellSize);
       break;
     case "random":
-        if (Math.random() < 0.3) {
+        // if (Math.random() < 0.5) {
+          //console.log('randommmmmmmmm')
           goal = randomGoal(ghost,pacman,maze, cellSize);
-        } else {
-          goal = { x: pacmanGridX, y: pacmanGridY };
-        }
+        // } else {
+        //   goal = { x: pacmanGridX, y: pacmanGridY };
+        // }
       break;
     default:
       goal = { x: pacmanGridX, y: pacmanGridY };
