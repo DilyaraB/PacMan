@@ -169,7 +169,6 @@ const ambushGoal = (pacman: Pacman, lookahead: number, maze: conf.Maze, cellSize
 function randomGoal(ghost: Ghost, pacman: Pacman, maze: conf.Maze, cellSize: number): Coord {
 
   if (ghost.lastDirection) {
-    console.log('last direction: valid');
 
     const newX = ghost.coord.x + ghost.lastDirection.x * cellSize;
     const newY = ghost.coord.y + ghost.lastDirection.y * cellSize;
@@ -181,7 +180,7 @@ function randomGoal(ghost: Ghost, pacman: Pacman, maze: conf.Maze, cellSize: num
     if (maze[gridY] && gridX >= 0 && gridX < maze[gridY].length && maze[gridY][gridX] === ' ') {
       return { x: gridX, y: gridY };
     }else{
-      
+
       //last direction blocked, selecting a new random direction
       const directions = [
         { x: 1, y: 0 }, { x: -1, y: 0 },
@@ -198,7 +197,6 @@ function randomGoal(ghost: Ghost, pacman: Pacman, maze: conf.Maze, cellSize: num
       const gridY = pixelToGrid(newY, cellSize);
 
       if (maze[gridY] && gridX >= 0 && gridX < maze[gridY].length && maze[gridY][gridX] === ' ') {
-        console.log('yesssss')
         return { x: gridX, y: gridY };
       }
     }
@@ -227,12 +225,7 @@ const updateGhostPosition = (bound: Size) => (maze: conf.Maze) => (pacman: Pacma
       goal = ambushGoal(pacman, conf.AmbushGoalLookAhead, maze, cellSize);
       break;
     case "random":
-        // if (Math.random() < 0.5) {
-          //console.log('randommmmmmmmm')
-          goal = randomGoal(ghost,pacman,maze, cellSize);
-        // } else {
-        //   goal = { x: pacmanGridX, y: pacmanGridY };
-        // }
+        goal = randomGoal(ghost,pacman,maze, cellSize);
       break;
     default:
       goal = { x: pacmanGridX, y: pacmanGridY };
