@@ -48,10 +48,22 @@ export const endOfGame = (state: State): boolean => state.pieces.length > 0
 export const generatePieces = (maze: conf.Maze, cellSize: number) => {
   const pieces = [];
 
+  const width = maze[0].length;
+  const height = maze.length;
+
+  //détermine la boite de départ des fantomes
+  const midColStart = Math.floor(width / 2) - 1;
+  const midColEnd = Math.floor(width / 2) + 1;
+
+  const midRowStart = Math.floor(height / 2) - 1;
+  const midRowEnd = Math.floor(height / 2) + 1;
+
   for (let row = 0; row < maze.length; row++) {
     for (let col = 0; col < maze[row].length; col++) {
-      if (maze[row][col] === ' ') {
-        // position centrale de la cellule pour placer la pièce
+      if (maze[row][col] === ' ' && 
+          !(col >= midColStart && col <= midColEnd && 
+            row >= midRowStart && row <= midRowEnd)) {  
+
         const centerX = col * cellSize + cellSize / 2;
         const centerY = row * cellSize + cellSize / 2;
         //piece invincible = gommes
@@ -77,7 +89,7 @@ export const step = (state: State) => {
   
   state.ghosts.forEach((ghost) => {
     if (collidePacmanGhost(state.pacman, ghost)) {
-      if (ghost.invincible == 0){
+      if (ghost.invincible === 0){
         state.endOfGame = true;
       }
       else{
@@ -90,7 +102,7 @@ export const step = (state: State) => {
     }
   });
 
-  state.pieces.map((p) => { 
+  state.pieces = state.pieces.map((p) => {
     if (collidePacmanPiece(state.pacman, p)) {
       state.pacman.score++;
       p.life--;
@@ -99,7 +111,15 @@ export const step = (state: State) => {
         state.ghosts.forEach(ghost => ghost.invincible = conf.ghostInvisibleTime); 
       }
     }
-  });
+    return p;
+  }).filter((p) => p.life > 0);
+
+  if (state.pieces.length === 0) {
+    state.pieces = generatePieces(
+      state.maze, 
+      state.cellSize
+    );
+  }
 
   if (state.pacman.invincible) {
     state.pacman.invincible -= 1;
@@ -108,10 +128,9 @@ export const step = (state: State) => {
     });
   }
   
-  return {
-    ...state,
-    pieces: state.pieces.filter((p) => p.life > 0),
-    pacman : updatePacmanPosition(state.size)(state.maze)(state.pacman)(state.cellSize),
-    ghosts: updateGhostsPosition(state.size)(state.maze)(state.pacman)(state.ghosts)(state.cellSize),
-  };
+  state.pacman = updatePacmanPosition(state.size)(state.maze)(state.pacman)(state.cellSize);
+  state.ghosts = updateGhostsPosition(state.size)(state.maze)(state.pacman)(state.ghosts)(state.cellSize);
+  
+  return state;
+
 };

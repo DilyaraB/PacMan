@@ -1,11 +1,6 @@
 import * as conf from './conf'
 import { State } from './state'
 
-const COLORS = {
-  RED: '#ff0000',
-  GREEN: '#008800',
-  BLUE: '#0000ff',
-}
 
 const clear = (ctx: CanvasRenderingContext2D) => {
   const { height, width } = ctx.canvas
@@ -67,7 +62,7 @@ const drawPiece = (
 ) => {
   ctx.beginPath();
   ctx.fillStyle = invincible ? "green" : "yellow";
-  const displayRadius = invincible ? radius * 1.5 : radius; // Augmenter le rayon si invincible
+  const displayRadius = invincible ? radius * 1.5 : radius; // Augmenter le rayon s'il s'agit d'une gomme
   ctx.arc(x, y, 
     displayRadius, 
     0, 
@@ -92,9 +87,10 @@ function drawGhost(
       ctx.drawImage(ghostImage, x - radius, y - radius, radius * 2, radius * 2);
     };
   }
+
   if (invincible > 1 && invincible < 200 && ghostImage === conf.ghostImages.edible) {
-    // Créer un effet de clignotement pour prévenir que le fantôme sera bientôt invincible
-    const blinkInterval = 200; // Durée du clignotement en millisecondes
+    // crée un effet de clignotement pour prévenir que le fantôme sera bientôt invincible
+    const blinkInterval = 200;
     const currentTime = Date.now();
     if (Math.floor(currentTime / blinkInterval) % 2 === 0) {
       ctx.drawImage(conf.ghostImages.edible, x - radius, y - radius, radius * 2, radius * 2);
@@ -161,8 +157,8 @@ export const render =
     clear(ctx)
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    //const {height,  width } = props.window; // Get canvas dimensions
     displayWindow(ctx, 0 , 0 , state.size.width, state.size.height)
+    
     state.pieces.map((c) =>
       drawPiece(
         ctx,
@@ -173,13 +169,15 @@ export const render =
       )
     )
     drawLabyrinth(ctx, props, state.maze)
+
     drawPacman(ctx, state.pacman.coord, state.pacman.direction, state.pacman.radius)
+    
     state.ghosts.forEach((ghost) => {
       drawGhost(ctx, ghost.coord, ghost.radius, ghost.type, ghost.invincible);
     });
 
     diplayScoreText(ctx)(state)
-    //console.log(state.endOfGame)
+
     if (state.endOfGame) {
       displayEndText(ctx)(state)
     }
